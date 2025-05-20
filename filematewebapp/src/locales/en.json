@@ -15,7 +15,9 @@
     "turkish": "Turkish",
     "english": "English",
     "login": "Login",
-    "logout": "Logout"
+    "logout": "Logout",
+    "cancel": "Cancel",
+    "upload": "Upload"
   },
   "login": {
     "title": "Login",
@@ -48,5 +50,16 @@
     "submit": "Send Reset Link",
     "backToLogin": "Back to Login",
     "successMessage": "Password reset link sent to your email"
+  },
+  "myFiles": {
+    "title": "My Files",
+    "uploadFile": "Upload File",
+    "selectFile": "Select File",
+    "preview": "Preview",
+    "fileName": "File Name",
+    "fileSize": "File Size",
+    "fileType": "File Type",
+    "uploadDate": "Upload Date",
+    "actions": "Actions"
   }
 } 

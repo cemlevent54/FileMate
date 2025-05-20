@@ -8,6 +8,8 @@ import ForgotPassword from '../pages/ForgotPassword';
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminUsers from '../pages/AdminUsers';
 import AdminFiles from '../pages/AdminFiles';
+import MyFiles from '../pages/MyFiles';
+import Profile from '../pages/Profile';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -30,6 +32,16 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={
         <Layout>
           <MainContent />
+        </Layout>
+      } />
+      <Route path="/my-files" element={
+        <Layout>
+          <MyFiles />
+        </Layout>
+      } />
+      <Route path="/profile" element={
+        <Layout>
+          <Profile />
         </Layout>
       } />
       <Route path="/admin" element={<AdminDashboard />} />

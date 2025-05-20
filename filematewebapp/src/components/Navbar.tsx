@@ -40,9 +40,6 @@ const Navbar: React.FC = () => {
                   <Link className="nav-link" to="/my-files">{translations.navbar.files}</Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/shares">{translations.navbar.shares}</Link>
-                </li>
-                <li className="nav-item">
                   <Link className="nav-link" to="/profile">{translations.navbar.profile}</Link>
                 </li>
               </>

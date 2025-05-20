@@ -15,7 +15,9 @@
     "turkish": "Türkçe",
     "english": "İngilizce",
     "login": "Giriş",
-    "logout": "Çıkış"
+    "logout": "Çıkış",
+    "cancel": "İptal",
+    "upload": "Yükle"
   },
   "login": {
     "title": "Giriş",
@@ -48,5 +50,16 @@
     "submit": "Sıfırlama Bağlantısı Gönder",
     "backToLogin": "Girişe Dön",
     "successMessage": "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi"
+  },
+  "myFiles": {
+    "title": "Dosyalarım",
+    "uploadFile": "Dosya Yükle",
+    "selectFile": "Dosya Seçin",
+    "preview": "Önizleme",
+    "fileName": "Dosya Adı",
+    "fileSize": "Dosya Boyutu",
+    "fileType": "Dosya Tipi",
+    "uploadDate": "Yüklenme Tarihi",
+    "actions": "İşlemler"
   }
 } 
