@@ -44,4 +44,98 @@
   margin: 0;
   font-size: 2rem;
   font-weight: bold;
+}
+
+/* Modal özel stilleri */
+.custom-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.custom-modal {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(44,62,80,0.18), 0 1.5px 6px rgba(44,62,80,0.10);
+  max-width: 420px;
+  width: 100%;
+  padding: 0 0 24px 0;
+  animation: modal-fade-in 0.35s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+
+.custom-modal .modal-header {
+  padding: 20px 28px 12px 28px;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 16px 16px 0 0;
+  background: #f8fafc;
+}
+
+.custom-modal .modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.custom-modal .btn-close {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.custom-modal .btn-close:hover {
+  opacity: 1;
+  color: #e74c3c;
+}
+
+.custom-modal .modal-body {
+  padding: 18px 28px 0 28px;
+}
+
+.custom-modal .modal-body p {
+  margin-bottom: 8px;
+  color: #34495e;
+  font-size: 1.05rem;
+}
+
+.custom-modal .btn {
+  width: 100%;
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: 8px;
+  margin-top: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.custom-modal .btn-primary {
+  background: #2c3e50;
+  border: none;
+  color: #fff;
+}
+.custom-modal .btn-primary:hover {
+  background: #1a232c;
+}
+
+@media (max-width: 500px) {
+  .custom-modal {
+    max-width: 95vw;
+    padding: 0 0 16px 0;
+  }
+  .custom-modal .modal-header, .custom-modal .modal-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+.animate-modal {
+  animation: modal-fade-in 0.35s cubic-bezier(0.4,0,0.2,1);
 } 
