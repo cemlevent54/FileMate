@@ -1,0 +1,38 @@
+{
+  "navbar": {
+    "home": "Ana Sayfa",
+    "files": "Dosyalarım",
+    "shares": "Paylaşımlar",
+    "profile": "Profil",
+    "loginRegister": "Giriş/Kayıt"
+  },
+  "welcome": {
+    "title": "FileMate'e Hoş Geldiniz",
+    "subtitle": "Dosya yönetim sisteminiz"
+  },
+  "common": {
+    "language": "Dil",
+    "turkish": "Türkçe",
+    "english": "İngilizce",
+    "login": "Giriş Yap"
+  },
+  "login": {
+    "title": "Giriş Yap",
+    "email": "E-posta",
+    "password": "Şifre",
+    "submit": "Giriş Yap",
+    "noAccount": "Hesabınız yok mu?",
+    "forgotPassword": "Şifrenizi mi unuttunuz?"
+  },
+  "register": {
+    "title": "Kayıt Ol",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "password": "Şifre",
+    "confirmPassword": "Şifre Tekrar",
+    "submit": "Kayıt Ol",
+    "hasAccount": "Zaten bir hesabınız var mı?",
+    "passwordMismatch": "Şifreler eşleşmiyor",
+    "error": "Kayıt işlemi sırasında bir hata oluştu"
+  }
+} 
