@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import '../styles/Register.css';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -16,10 +15,7 @@ const Register: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +28,6 @@ const Register: React.FC = () => {
     }
 
     try {
-      // API çağrısı burada yapılacak
       console.log('Kayıt bilgileri:', formData);
       navigate('/login');
     } catch (err) {
@@ -41,63 +36,72 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="register-container">
-      <div className="register-form-container">
-        <h2>{translations.register.title}</h2>
-        {error && <div className="error-message">{error}</div>}
+    <div className="container d-flex justify-content-center align-items-center min-vh-100">
+      <div className="card shadow-sm p-4" style={{ maxWidth: '500px', width: '100%' }}>
+        <h3 className="text-center mb-4">{translations.register.title}</h3>
+        {error && <div className="alert alert-danger text-center">{error}</div>}
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="name">{translations.register.name}</label>
+          <div className="mb-3">
+            <label htmlFor="name" className="form-label">{translations.register.name}</label>
             <input
               type="text"
+              className="form-control"
               id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
+              placeholder={translations.register.namePlaceholder}
               required
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="email">{translations.register.email}</label>
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">{translations.register.email}</label>
             <input
               type="email"
+              className="form-control"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
+              placeholder={translations.register.emailPlaceholder}
               required
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="password">{translations.register.password}</label>
+          <div className="mb-3">
+            <label htmlFor="password" className="form-label">{translations.register.password}</label>
             <input
               type="password"
+              className="form-control"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
+              placeholder={translations.register.passwordPlaceholder}
               required
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="confirmPassword">{translations.register.confirmPassword}</label>
+          <div className="mb-3">
+            <label htmlFor="confirmPassword" className="form-label">{translations.register.confirmPassword}</label>
             <input
               type="password"
+              className="form-control"
               id="confirmPassword"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
+              placeholder={translations.register.confirmPasswordPlaceholder}
               required
             />
           </div>
-          <button type="submit" className="register-button">{translations.register.submit}</button>
+          <button type="submit" className="btn btn-primary w-100">{translations.register.submit}</button>
         </form>
-        <div className="login-link" style={{textAlign: 'center'}}>
-          <Link to="/login">{translations.register.hasAccount}</Link>
+        <div className="text-center mt-3">
+          <span>{translations.register.hasAccount} </span>
+          <Link to="/login" className="btn btn-outline-primary btn-sm ms-2">{translations.register.login}</Link>
         </div>
       </div>
     </div>
   );
 };
 
-export default Register; 
+export default Register;

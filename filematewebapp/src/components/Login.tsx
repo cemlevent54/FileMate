@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import './Login.css';
 
 const Login: React.FC = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -10,54 +9,73 @@ const Login: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Login işlemleri burada yapılacak
     console.log('Login attempt:', { email, password });
+    // Giriş işlemi başarılıysa modalı kapat
+    setIsLoginOpen(false);
   };
 
   return (
-    <div className="login-container">
+    <>
       <button 
-        className="login-button"
-        onClick={() => setIsLoginOpen(!isLoginOpen)}
+        className="btn btn-outline-primary"
+        onClick={() => setIsLoginOpen(true)}
       >
-        <i className="fas fa-user"></i>
+        <i className="fas fa-user me-2"></i>
         {translations.common.login}
       </button>
 
       {isLoginOpen && (
-        <div className="login-modal">
-          <div className="login-content">
-            <h2>{translations.login.title}</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="email">{translations.login.email}</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+        <div
+          className="modal fade show d-block"
+          tabIndex={-1}
+          role="dialog"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content p-3">
+              <div className="modal-header">
+                <h5 className="modal-title">{translations.login.title}</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setIsLoginOpen(false)}
+                ></button>
               </div>
-              <div className="form-group">
-                <label htmlFor="password">{translations.login.password}</label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+              <div className="modal-body">
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="modal-email" className="form-label">{translations.login.email}</label>
+                    <input
+                      type="email"
+                      id="modal-email"
+                      className="form-control"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="modal-password" className="form-label">{translations.login.password}</label>
+                    <input
+                      type="password"
+                      id="modal-password"
+                      className="form-control"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary w-100">
+                    {translations.login.submit}
+                  </button>
+                </form>
               </div>
-              <button type="submit" className="submit-button">
-                {translations.login.submit}
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
-export default Login; 
+export default Login;

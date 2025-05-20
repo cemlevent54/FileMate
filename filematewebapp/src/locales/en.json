@@ -14,7 +14,8 @@
     "language": "Language",
     "turkish": "Turkish",
     "english": "English",
-    "login": "Login"
+    "login": "Login",
+    "logout": "Logout"
   },
   "login": {
     "title": "Login",
@@ -22,7 +23,8 @@
     "password": "Password",
     "submit": "Sign In",
     "noAccount": "Don't have an account?",
-    "forgotPassword": "Forgot your password?"
+    "forgotPassword": "Forgot your password?",
+    "error": "An error occurred during login"
   },
   "register": {
     "title": "Register",
@@ -33,6 +35,18 @@
     "submit": "Register",
     "hasAccount": "Already have an account?",
     "passwordMismatch": "Passwords do not match",
-    "error": "An error occurred during registration"
+    "error": "An error occurred during registration",
+    "namePlaceholder": "Enter your name",
+    "emailPlaceholder": "example@email.com",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "login": "Login"
+  },
+  "forgotPassword": {
+    "title": "Password Reset",
+    "description": "If you've forgotten your password, enter your email address below to receive a password reset link.",
+    "submit": "Send Reset Link",
+    "backToLogin": "Back to Login",
+    "successMessage": "Password reset link sent to your email"
   }
 } 
