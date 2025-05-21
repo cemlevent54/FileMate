@@ -11,6 +11,9 @@
   "description": "",
   "dependencies": {
     "express": "^5.1.0",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
+    "sqlite3": "^5.1.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   }
