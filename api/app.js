@@ -9,6 +9,7 @@
  */
 
 const express = require('express');
+const configureCors = require('./config/cors');
 const configureMiddlewares = require('./config/middlewares');
 const configureEndpoints = require('./config/endpoints');
 const configureRoutes = require('./config/routes');
@@ -17,11 +18,13 @@ const configureRoutes = require('./config/routes');
 const app = express();
 
 // Yapılandırmaları sıralı bir şekilde uygula
-// 1. Önce middleware'ler
+
+configureCors(app);
+
 configureMiddlewares(app);
-// 2. Sonra endpoint'ler
+
 configureEndpoints(app);
-// 3. En son route'lar
+
 configureRoutes(app);
 
 module.exports = app; 

@@ -1,12 +1,28 @@
-const express = require('express');
-const router = express.Router();
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *         password:
+ *           type: string
+ *         name:
+ *           type: string
+ */
 
 /**
  * @swagger
  * /auth/register:
  *   post:
  *     summary: Yeni kullanıcı kaydı
- *     description: Yeni bir kullanıcı hesabı oluşturur
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -16,7 +32,6 @@ const router = express.Router();
  *             required:
  *               - email
  *               - password
- *               - name
  *             properties:
  *               email:
  *                 type: string
@@ -30,22 +45,13 @@ const router = express.Router();
  *       400:
  *         description: Geçersiz istek
  */
-router.post('/register', async (req, res) => {
-    try {
-        const { email, password, name } = req.body;
-        // TODO: Kullanıcı kayıt işlemleri burada yapılacak
-        res.status(201).json({ message: 'Kullanıcı başarıyla oluşturuldu' });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
 
 /**
  * @swagger
  * /auth/login:
  *   post:
  *     summary: Kullanıcı girişi
- *     description: Kullanıcı girişi yapar ve JWT token döner
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -62,26 +68,56 @@ router.post('/register', async (req, res) => {
  *                 type: string
  *     responses:
  *       200:
- *         description: Başarılı giriş
+ *         description: Giriş başarılı
  *       401:
  *         description: Geçersiz kimlik bilgileri
  */
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        // TODO: Kullanıcı giriş işlemleri burada yapılacak
-        res.status(200).json({ message: 'Giriş başarılı', token: 'JWT_TOKEN' });
-    } catch (error) {
-        res.status(401).json({ error: 'Geçersiz kimlik bilgileri' });
-    }
-});
+
+/**
+ * @swagger
+ * /auth/refresh-token:
+ *   post:
+ *     summary: Access token yenileme
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token başarıyla yenilendi
+ *       401:
+ *         description: Geçersiz refresh token
+ */
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Kullanıcı çıkışı
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Başarıyla çıkış yapıldı
+ *       401:
+ *         description: Yetkilendirme hatası
+ */
 
 /**
  * @swagger
  * /auth/forgot-password:
  *   post:
  *     summary: Şifre sıfırlama
- *     description: Kullanıcının şifresini sıfırlamak için e-posta gönderir
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -99,14 +135,111 @@ router.post('/login', async (req, res) => {
  *       404:
  *         description: Kullanıcı bulunamadı
  */
-router.post('/forgot-password', async (req, res) => {
-    try {
-        const { email } = req.body;
-        // TODO: Şifre sıfırlama işlemleri burada yapılacak
-        res.status(200).json({ message: 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi' });
-    } catch (error) {
-        res.status(404).json({ error: 'Kullanıcı bulunamadı' });
-    }
-});
 
-module.exports = router; 
+const authService = require('../services/authService');
+const jwt = require('jsonwebtoken');
+
+// JWT doğrulama middleware'i
+const authenticateToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Yetkilendirme token\'ı gerekli' });
+    }
+
+    // Token'ın refresh token olmadığından emin olalım
+    const decoded = jwt.decode(token);
+    if (decoded && decoded.type === 'refresh') {
+      return res.status(403).json({ error: 'Refresh token kullanılamaz' });
+    }
+
+    const user = await authService.verifyToken(token);
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: error.message });
+  }
+};
+
+module.exports = {
+  register: async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+      const result = await authService.register(email, password, name);
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  login: async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const result = await authService.login(email, password);
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(401).json({ error: error.message });
+    }
+  },
+
+  refreshToken: async (req, res) => {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken) {
+        return res.status(400).json({ error: 'Refresh token gerekli' });
+      }
+      const result = await authService.refreshToken(refreshToken);
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(401).json({ error: error.message });
+    }
+  },
+
+  logout: async (req, res) => {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+      
+      if (!token) {
+        return res.status(400).json({ error: 'Token gerekli' });
+      }
+
+      await authService.logout(token);
+      res.status(200).json({ message: 'Başarıyla çıkış yapıldı' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const result = await authService.forgotPassword(email);
+      res.status(200).json({ 
+        message: 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi',
+        resetToken: result.resetToken 
+      });
+    } catch (error) {
+      res.status(404).json({ error: error.message });
+    }
+  },
+
+  // Kullanıcı bilgilerini getir
+  getProfile: async (req, res) => {
+    try {
+      res.status(200).json({
+        user: {
+          id: req.user.id,
+          email: req.user.email,
+          name: req.user.firstname
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  authenticateToken
+};

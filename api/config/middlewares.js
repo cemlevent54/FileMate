@@ -33,9 +33,18 @@ const swaggerOptions = {
                 description: 'Geliştirme sunucusu',
             },
         ],
+        tags: [
+            {
+                name: 'Auth',
+                description: 'Kimlik doğrulama işlemleri'
+            }
+        ]
     },
-    // Controller dosyalarındaki JSDoc yorumlarını tarar
-    apis: [path.join(__dirname, '../controllers/*.js')],
+    // Tüm controller ve route dosyalarını tara
+    apis: [
+        path.join(__dirname, '../controllers/*.js'),
+        path.join(__dirname, '../routes/*.js')
+    ],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
