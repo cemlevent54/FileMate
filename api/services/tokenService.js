@@ -6,19 +6,14 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secre
 const JWT_EXPIRES_IN = '1h';
 const JWT_REFRESH_EXPIRES_IN = '7d';
 
-// Token blacklist için basit bir in-memory çözüm (production'da Redis kullanılmalı)
-const tokenBlacklist = new Set();
+// Token blacklist için Map kullanımı (daha iyi performans için)
+const tokenBlacklist = new Map();
 
 // Blacklist temizleme fonksiyonu (24 saatte bir çalışır)
 const cleanupBlacklist = () => {
   const now = Date.now();
-  for (const token of tokenBlacklist) {
-    try {
-      const decoded = jwt.decode(token);
-      if (decoded && decoded.exp * 1000 < now) {
-        tokenBlacklist.delete(token);
-      }
-    } catch (error) {
+  for (const [token, expiry] of tokenBlacklist.entries()) {
+    if (expiry < now) {
       tokenBlacklist.delete(token);
     }
   }
@@ -53,6 +48,10 @@ module.exports = {
 
   verifyAccessToken: (token) => {
     try {
+      if (!token) {
+        throw new Error('Token bulunamadı');
+      }
+
       if (tokenBlacklist.has(token)) {
         throw new Error('Token geçersiz kılınmış');
       }
@@ -65,31 +64,81 @@ module.exports = {
 
       return decoded;
     } catch (error) {
-      throw new Error('Geçersiz veya süresi dolmuş token');
+      if (error.name === 'JsonWebTokenError') {
+        throw new Error('Geçersiz token');
+      } else if (error.name === 'TokenExpiredError') {
+        throw new Error('Token süresi dolmuş');
+      }
+      throw error;
     }
   },
 
   verifyRefreshToken: (token) => {
     try {
+      if (!token) {
+        throw new Error('Refresh token bulunamadı');
+      }
+
       const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
       
       if (decoded.type !== 'refresh') {
-        throw new Error('Geçersiz token tipi');
+        throw new Error('Geçersiz refresh token tipi');
       }
 
       return decoded;
     } catch (error) {
-      throw new Error('Geçersiz refresh token');
+      if (error.name === 'JsonWebTokenError') {
+        throw new Error('Geçersiz refresh token');
+      } else if (error.name === 'TokenExpiredError') {
+        throw new Error('Refresh token süresi dolmuş');
+      }
+      throw error;
     }
   },
 
   invalidateToken: (token) => {
     try {
+      if (!token) {
+        throw new Error('Token bulunamadı');
+      }
+
       const decoded = jwt.verify(token, JWT_SECRET);
-      tokenBlacklist.add(token);
+      const expiry = decoded.exp * 1000; // Convert to milliseconds
+      
+      // Token'ı blacklist'e ekle
+      tokenBlacklist.set(token, expiry);
+      
       return true;
     } catch (error) {
-      throw new Error('Geçersiz token');
+      if (error.name === 'JsonWebTokenError') {
+        throw new Error('Geçersiz token');
+      } else if (error.name === 'TokenExpiredError') {
+        throw new Error('Token süresi dolmuş');
+      }
+      throw error;
+    }
+  },
+
+  invalidateRefreshToken: (token) => {
+    try {
+      if (!token) {
+        throw new Error('Refresh token bulunamadı');
+      }
+
+      const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
+      const expiry = decoded.exp * 1000; // Convert to milliseconds
+      
+      // Refresh token'ı blacklist'e ekle
+      tokenBlacklist.set(token, expiry);
+      
+      return true;
+    } catch (error) {
+      if (error.name === 'JsonWebTokenError') {
+        throw new Error('Geçersiz refresh token');
+      } else if (error.name === 'TokenExpiredError') {
+        throw new Error('Refresh token süresi dolmuş');
+      }
+      throw error;
     }
   },
 

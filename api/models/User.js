@@ -26,11 +26,13 @@ module.exports = (sequelize, DataTypes) => {
       },
       firstName: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+        field: 'firstname'
       },
       lastName: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+        field: 'lastname'
       },
       isActive: {
         type: DataTypes.BOOLEAN,

@@ -4,7 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
-const API_URL = process.env.API_URL || 'http://localhost:8030';
+const API_BASE_URL = 'http://localhost:8030';
+
+interface LoginResponse {
+  user: {
+    id: number;
+    email: string;
+  };
+  accessToken: string;
+  refreshToken: string;
+  expireDate: string;
+}
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -35,14 +45,26 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const { isAdmin } = await login(email, password);
-      if (isAdmin) {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
-    } catch (err) {
-      setError(translations.login.error);
+      const response = await axios.post<LoginResponse>(`${API_BASE_URL}/auth/login`, {
+        email,
+        password
+      });
+
+      const { accessToken, refreshToken, user } = response.data;
+      
+      // Token'ları localStorage'a kaydet
+      localStorage.setItem('token', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // Auth context'i güncelle
+      await login(email, password);
+
+      // Yönlendirme yap
+      navigate('/profile');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || translations.login.error);
     }
   };
 
@@ -81,7 +103,7 @@ const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        <div className="text-center mt-3">
+        <div className="mt-3 text-center">
           <button
             type="button"
             className="btn btn-outline-primary btn-sm ms-2"

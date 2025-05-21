@@ -1,7 +1,9 @@
-const userRepository = require('../repositories/userRepository');
+const UserRepository = require('../repositories/userRepository');
 const bcrypt = require('bcrypt');
 const { Role } = require('../models');
 const tokenService = require('./tokenService');
+const userRepository = new UserRepository();
+const jwt = require('jsonwebtoken');
 
 module.exports = {
   register: async (email, password, name) => {
@@ -120,9 +122,22 @@ module.exports = {
 
   logout: async (token) => {
     try {
-      return tokenService.invalidateToken(token);
+      if (!token) {
+        throw new Error('Token bulunamadı');
+      }
+
+      // Access token'ı geçersiz kıl
+      await tokenService.invalidateToken(token);
+
+      // Eğer refresh token da varsa onu da geçersiz kıl
+      const decoded = jwt.decode(token);
+      if (decoded && decoded.type === 'refresh') {
+        await tokenService.invalidateRefreshToken(token);
+      }
+
+      return true;
     } catch (error) {
-      throw new Error('Geçersiz token');
+      throw new Error(`Çıkış yapılırken hata oluştu: ${error.message}`);
     }
   },
 
