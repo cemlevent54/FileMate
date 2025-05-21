@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+
+const API_URL = process.env.API_URL || 'http://localhost:8030';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');

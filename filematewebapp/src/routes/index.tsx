@@ -10,6 +10,15 @@ import AdminUsers from '../pages/AdminUsers';
 import AdminFiles from '../pages/AdminFiles';
 import MyFiles from '../pages/MyFiles';
 import Profile from '../pages/Profile';
+import { useAuth } from '../context/AuthContext';
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
 
 const AppRoutes: React.FC = () => {
   return (
@@ -35,14 +44,18 @@ const AppRoutes: React.FC = () => {
         </Layout>
       } />
       <Route path="/my-files" element={
-        <Layout>
-          <MyFiles />
-        </Layout>
+        <ProtectedRoute>
+          <Layout>
+            <MyFiles />
+          </Layout>
+        </ProtectedRoute>
       } />
       <Route path="/profile" element={
-        <Layout>
-          <Profile />
-        </Layout>
+        <ProtectedRoute>
+          <Layout>
+            <Profile />
+          </Layout>
+        </ProtectedRoute>
       } />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUsers />} />

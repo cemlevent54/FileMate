@@ -50,7 +50,7 @@
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Kullanıcı girişi
+ *     summary: Kullanıcı giriş
  *     tags: [Auth]
  *     requestBody:
  *       required: true

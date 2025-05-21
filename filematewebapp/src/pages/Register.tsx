@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { translations } = useLanguage();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -28,10 +30,10 @@ const Register: React.FC = () => {
     }
 
     try {
-      console.log('Kayıt bilgileri:', formData);
+      await register(formData.name, formData.email, formData.password);
       navigate('/login');
-    } catch (err) {
-      setError(translations.register.error);
+    } catch (err: any) {
+      setError(err.message || translations.register.error);
     }
   };
 
