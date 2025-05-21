@@ -3,6 +3,7 @@ import { Container, Form, Button, Card, Alert, Modal } from 'react-bootstrap';
 import axios, { AxiosResponse } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // API base URL'ini tanımlayalım
 const API_BASE_URL = 'http://localhost:8030'; // Backend'in çalıştığı port'a göre değiştirin
@@ -21,6 +22,7 @@ interface PasswordData {
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { translations } = useLanguage();
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -69,7 +71,7 @@ const Profile: React.FC = () => {
         if (error.response?.status === 401) {
           navigate('/login');
         } else {
-          setError(error.response?.data?.message || 'Kullanıcı bilgileri yüklenirken bir hata oluştu');
+          setError(translations.profilePage.errorUserInfo);
         }
       } finally {
         setLoading(false);
@@ -97,7 +99,7 @@ const Profile: React.FC = () => {
     e.preventDefault();
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('Yeni şifreler eşleşmiyor');
+      setError(translations.profilePage.errorPasswordMatch);
       return;
     }
 
@@ -115,7 +117,7 @@ const Profile: React.FC = () => {
         }
       });
 
-      setSuccess('Şifreniz başarıyla güncellendi');
+      setSuccess(translations.profilePage.successPassword);
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -123,7 +125,7 @@ const Profile: React.FC = () => {
       });
     } catch (error: any) {
       console.error('Şifre güncellenirken hata oluştu:', error);
-      setError(error.response?.data?.message || 'Şifre güncellenirken bir hata oluştu');
+      setError(translations.profilePage.errorPassword);
     } finally {
       setLoading(false);
     }
@@ -135,8 +137,8 @@ const Profile: React.FC = () => {
       setLoading(true);
       setError(null);
       setSuccess(null);
-
-      await axios.put(`${API_BASE_URL}/user/update-info`, {
+  
+      const response = await axios.put(`${API_BASE_URL}/user/update-info`, {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email
@@ -145,15 +147,25 @@ const Profile: React.FC = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-
-      setSuccess('Kullanıcı bilgileri başarıyla güncellendi');
+  
+      setSuccess(translations.profilePage.successInfo);
+  
+      // 👇 Güncel verileri state'e yaz
+      if (response.data.user) {
+        setUserData({
+          firstName: response.data.user.firstName,
+          lastName: response.data.user.lastName,
+          email: response.data.user.email
+        });
+      }
     } catch (error: any) {
       console.error('Kullanıcı bilgileri güncellenirken hata oluştu:', error);
-      setError(error.response?.data?.message || 'Kullanıcı bilgileri güncellenirken bir hata oluştu');
+      setError(translations.profilePage.errorInfo);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleDeleteAccount = async () => {
     try {
@@ -170,7 +182,7 @@ const Profile: React.FC = () => {
       window.location.href = '/login';
     } catch (error: any) {
       console.error('Hesap silinirken hata oluştu:', error);
-      setError(error.response?.data?.message || 'Hesap silinirken bir hata oluştu');
+      setError(translations.profilePage.errorDelete);
       setShowDeleteModal(false);
     } finally {
       setLoading(false);
@@ -179,7 +191,7 @@ const Profile: React.FC = () => {
 
   return (
     <Container className="py-4">
-      <h2 className="mb-4">Profil Ayarları</h2>
+      <h2 className="mb-4">{translations.profilePage.title}</h2>
 
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
@@ -187,10 +199,10 @@ const Profile: React.FC = () => {
       {/* Şifre Değiştirme Bölümü */}
       <Card className="mb-4">
         <Card.Body>
-          <Card.Title>Şifre Değiştir</Card.Title>
+          <Card.Title>{translations.profilePage.changePassword}</Card.Title>
           <Form onSubmit={handlePasswordSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Mevcut Şifre</Form.Label>
+              <Form.Label>{translations.profilePage.currentPassword}</Form.Label>
               <Form.Control
                 type="password"
                 name="currentPassword"
@@ -202,7 +214,7 @@ const Profile: React.FC = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Yeni Şifre</Form.Label>
+              <Form.Label>{translations.profilePage.newPassword}</Form.Label>
               <Form.Control
                 type="password"
                 name="newPassword"
@@ -214,7 +226,7 @@ const Profile: React.FC = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Yeni Şifre (Tekrar)</Form.Label>
+              <Form.Label>{translations.profilePage.confirmNewPassword}</Form.Label>
               <Form.Control
                 type="password"
                 name="confirmPassword"
@@ -226,7 +238,7 @@ const Profile: React.FC = () => {
             </Form.Group>
 
             <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
+              {loading ? translations.profilePage.updating : translations.profilePage.updatePassword}
             </Button>
           </Form>
         </Card.Body>
@@ -235,12 +247,12 @@ const Profile: React.FC = () => {
       {/* Kişisel Bilgiler Bölümü */}
       <Card className="mb-4">
         <Card.Body>
-          <Card.Title>Kişisel Bilgiler</Card.Title>
+          <Card.Title>{translations.profilePage.personalInfo}</Card.Title>
           <Form onSubmit={handleUserDataSubmit}>
             <div className="row">
               <div className="col-md-6">
                 <Form.Group className="mb-3">
-                  <Form.Label>Ad</Form.Label>
+                  <Form.Label>{translations.profilePage.firstName}</Form.Label>
                   <Form.Control
                     type="text"
                     name="firstName"
@@ -253,7 +265,7 @@ const Profile: React.FC = () => {
               </div>
               <div className="col-md-6">
                 <Form.Group className="mb-3">
-                  <Form.Label>Soyad</Form.Label>
+                  <Form.Label>{translations.profilePage.lastName}</Form.Label>
                   <Form.Control
                     type="text"
                     name="lastName"
@@ -267,7 +279,7 @@ const Profile: React.FC = () => {
             </div>
 
             <Form.Group className="mb-3">
-              <Form.Label>E-posta</Form.Label>
+              <Form.Label>{translations.profilePage.email}</Form.Label>
               <Form.Control
                 type="email"
                 name="email"
@@ -279,7 +291,7 @@ const Profile: React.FC = () => {
             </Form.Group>
 
             <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? 'Güncelleniyor...' : 'Bilgileri Güncelle'}
+              {loading ? translations.profilePage.updating : translations.profilePage.updateInfo}
             </Button>
           </Form>
         </Card.Body>
@@ -288,16 +300,16 @@ const Profile: React.FC = () => {
       {/* Hesap Silme Bölümü */}
       <Card className="mb-4 border-danger">
         <Card.Body>
-          <Card.Title className="text-danger">Hesabı Sil</Card.Title>
+          <Card.Title className="text-danger">{translations.profilePage.deleteAccount}</Card.Title>
           <Alert variant="danger">
-            Hesabınızı silmek geri alınamaz bir işlemdir. Tüm verileriniz kalıcı olarak silinecektir.
+            {translations.profilePage.deleteAccountWarning}
           </Alert>
           <Button 
             variant="outline-danger" 
             onClick={() => setShowDeleteModal(true)}
             disabled={loading}
           >
-            Hesabımı Sil
+            {translations.profilePage.deleteAccountButton}
           </Button>
         </Card.Body>
       </Card>
@@ -305,17 +317,17 @@ const Profile: React.FC = () => {
       {/* Hesap Silme Onay Modalı */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Hesap Silme Onayı</Modal.Title>
+          <Modal.Title>{translations.profilePage.deleteAccountTitle}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          {translations.profilePage.deleteAccountDesc}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            İptal
+            {translations.profilePage.cancel}
           </Button>
           <Button variant="danger" onClick={handleDeleteAccount} disabled={loading}>
-            {loading ? 'Siliniyor...' : 'Hesabımı Sil'}
+            {loading ? translations.profilePage.deleting : translations.profilePage.deleteAccountButton}
           </Button>
         </Modal.Footer>
       </Modal>

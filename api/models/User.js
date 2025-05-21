@@ -27,12 +27,12 @@ module.exports = (sequelize, DataTypes) => {
       firstName: {
         type: DataTypes.TEXT,
         allowNull: true,
-        field: 'firstname'
+        field: 'first_name'
       },
       lastName: {
         type: DataTypes.TEXT,
         allowNull: true,
-        field: 'lastname'
+        field: 'last_name'
       },
       isActive: {
         type: DataTypes.BOOLEAN,

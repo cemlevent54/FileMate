@@ -28,7 +28,7 @@ module.exports = {
     const newUser = await userRepository.create({ 
       email, 
       password: hashedPassword, 
-      firstname: name, 
+      first_name: name, 
       isActive: true,
       roleId: userRole.id
     });
@@ -45,7 +45,7 @@ module.exports = {
       user: {
         id: newUser.id,
         email: newUser.email,
-        name: newUser.firstname
+        name: newUser.first_name
       },
       message: "Kullanıcı başarıyla oluşturuldu",
       userId: newUser.id,
@@ -77,7 +77,9 @@ module.exports = {
       user: {
         id: user.id,
         email: user.email,
-        name: user.firstname
+        name: user.first_name,
+        roleId: user.roleId,
+        role: user.roleId === 2 ? 'ADMIN' : 'USER'
       },
       accessToken,
       refreshToken,

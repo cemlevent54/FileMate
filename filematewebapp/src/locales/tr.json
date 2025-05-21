@@ -61,5 +61,33 @@
     "fileType": "Dosya Tipi",
     "uploadDate": "Yüklenme Tarihi",
     "actions": "İşlemler"
+  },
+  "profilePage": {
+    "title": "Profil Ayarları",
+    "changePassword": "Şifre Değiştir",
+    "currentPassword": "Mevcut Şifre",
+    "newPassword": "Yeni Şifre",
+    "confirmNewPassword": "Yeni Şifre (Tekrar)",
+    "updatePassword": "Şifreyi Güncelle",
+    "personalInfo": "Kişisel Bilgiler",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "email": "E-posta",
+    "updateInfo": "Bilgileri Güncelle",
+    "deleteAccount": "Hesabı Sil",
+    "deleteAccountTitle": "Hesap Silme Onayı",
+    "deleteAccountDesc": "Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "deleteAccountWarning": "Hesabınızı silmek geri alınamaz bir işlemdir. Tüm verileriniz kalıcı olarak silinecektir.",
+    "deleteAccountButton": "Hesabımı Sil",
+    "cancel": "İptal",
+    "updating": "Güncelleniyor...",
+    "deleting": "Siliniyor...",
+    "successPassword": "Şifreniz başarıyla güncellendi",
+    "errorUserInfo": "Kullanıcı bilgileri yüklenirken bir hata oluştu",
+    "successInfo": "Kullanıcı bilgileri başarıyla güncellendi",
+    "errorPasswordMatch": "Yeni şifreler eşleşmiyor",
+    "errorPassword": "Şifre güncellenirken bir hata oluştu",
+    "errorInfo": "Kullanıcı bilgileri güncellenirken bir hata oluştu",
+    "errorDelete": "Hesap silinirken bir hata oluştu"
   }
 } 

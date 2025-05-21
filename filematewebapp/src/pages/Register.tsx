@@ -37,12 +37,16 @@ const Register: React.FC = () => {
     }
   };
 
+  
+
   return (
     <div className="container d-flex justify-content-center align-items-center min-vh-100">
       <div className="card shadow-sm p-4" style={{ maxWidth: '500px', width: '100%' }}>
         <h3 className="text-center mb-4">{translations.register.title}</h3>
         {error && <div className="alert alert-danger text-center">{error}</div>}
         <form onSubmit={handleSubmit}>
+          {/* Ad Soyad alanı */}
+          {/*
           <div className="mb-3">
             <label htmlFor="name" className="form-label">{translations.register.name}</label>
             <input
@@ -56,6 +60,7 @@ const Register: React.FC = () => {
               required
             />
           </div>
+          */}
           <div className="mb-3">
             <label htmlFor="email" className="form-label">{translations.register.email}</label>
             <input

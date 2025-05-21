@@ -2,17 +2,21 @@ import React, { useState, useEffect } from 'react';
 import '../styles/AdminDashboard.css';
 import AdminSidebar from '../components/AdminSidebar';
 import ConfirmModal from '../components/ConfirmModal';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:8030';
 
 interface User {
   id: number;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   email: string;
-  password: string;
-  role: string;
+  isActive: boolean;
+  roleId: number | null;
   createdAt: string;
   updatedAt: string;
-  isActive: boolean;
+  role?: string; // Frontend'de kullanılan rol gösterimi
+  password?: string; // Frontend'de kullanılan şifre gösterimi
 }
 
 // Tarih formatı için yardımcı fonksiyon
@@ -30,27 +34,25 @@ const mockUsers: User[] = [
     firstName: 'Ahmet',
     lastName: 'Yılmaz',
     email: 'user1@example.com',
-    password: '********',
-    role: 'user',
+    isActive: true,
+    roleId: 1,
     createdAt: new Date().toISOString(), // Şu anki tarih
     updatedAt: new Date().toISOString(), // Şu anki tarih
-    isActive: true,
   },
   {
     id: 2,
     firstName: 'Admin',
     lastName: 'User',
     email: 'admin@example.com',
-    password: '********',
-    role: 'admin',
+    isActive: false,
+    roleId: 2,
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 gün önce
     updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 gün önce
-    isActive: false,
   },
 ];
 
 const AdminUsers: React.FC = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -98,11 +100,11 @@ const AdminUsers: React.FC = () => {
   const handleShowUpdate = (user: User) => {
     setUserToUpdate(user);
     setUpdateForm({
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
       email: user.email,
-      role: user.role,
-      password: user.password,
+      role: user.roleId === 2 ? 'admin' : 'user',
+      password: '********',
       isActive: user.isActive
     });
     setShowUpdateModal(true);
@@ -121,37 +123,72 @@ const AdminUsers: React.FC = () => {
     }));
   };
 
-  const handleUpdateSubmit = (e: React.FormEvent) => {
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (userToUpdate) {
-      const updatedUser = {
-        ...userToUpdate,
-        ...updateForm,
-        updatedAt: new Date().toISOString() // Güncelleme tarihini otomatik güncelle
-      };
-      setUsers(users.map(user => 
-        user.id === userToUpdate.id ? updatedUser : user
-      ));
-      showToastMessage(`${updateForm.firstName} ${updateForm.lastName} kullanıcısı başarıyla güncellendi`, 'success');
-      handleCloseUpdateModal();
+      try {
+        const token = localStorage.getItem('token');
+        // API'ye gönderilecek veriyi hazırla
+        const { role, ...updateData } = {
+          ...updateForm,
+          roleId: updateForm.role === 'admin' ? 2 : 1 // role değerini roleId'ye çevir
+        };
+
+        const response = await axios.put(
+          `${API_BASE_URL}/admin/users/${userToUpdate.id}`,
+          updateData,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        // API'den gelen veriyi frontend formatına dönüştür
+        const updatedUser = {
+          ...response.data,
+          role: response.data.roleId === 2 ? 'admin' : 'user',
+          password: '********'
+        };
+        
+        setUsers(users.map(user => 
+          user.id === userToUpdate.id ? updatedUser : user
+        ));
+        showToastMessage(`${updateForm.firstName || 'Kullanıcı'} başarıyla güncellendi`, 'success');
+        handleCloseUpdateModal();
+      } catch (error) {
+        showToastMessage('Kullanıcı güncellenirken bir hata oluştu', 'warning');
+      }
     }
   };
 
-  const handleToggleActive = (id: number) => {
-    setUsers(users => {
-      const updatedUsers = users.map(u => {
+  const handleToggleActive = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const user = users.find(u => u.id === id);
+      if (!user) return;
+
+      const endpoint = user.isActive ? 'block' : 'activate';
+      await axios.post(
+        `${API_BASE_URL}/admin/users/${id}/${endpoint}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setUsers(users.map(u => {
         if (u.id === id) {
           const newStatus = !u.isActive;
           const message = newStatus 
-            ? `${u.firstName} ${u.lastName} kullanıcısı başarıyla aktif edildi`
-            : `${u.firstName} ${u.lastName} kullanıcısı başarıyla engellendi`;
+            ? `${u.firstName || 'Kullanıcı'} ${u.lastName || ''} kullanıcısı başarıyla aktif edildi`
+            : `${u.firstName || 'Kullanıcı'} ${u.lastName || ''} kullanıcısı başarıyla engellendi`;
           showToastMessage(message, newStatus ? 'success' : 'warning');
           return { ...u, isActive: newStatus };
         }
         return u;
-      });
-      return updatedUsers;
-    });
+      }));
+    } catch (error) {
+      showToastMessage('Kullanıcı durumu güncellenirken bir hata oluştu', 'warning');
+    }
   };
 
   const handleDeleteClick = (user: User) => {
@@ -159,10 +196,19 @@ const AdminUsers: React.FC = () => {
     setShowConfirm(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (userToDelete) {
-      setUsers(users => users.filter(u => u.id !== userToDelete.id));
-      showToastMessage(`${userToDelete.firstName} ${userToDelete.lastName} kullanıcısı başarıyla silindi`, 'warning');
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API_BASE_URL}/admin/users/${userToDelete.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setUsers(users.filter(u => u.id !== userToDelete.id));
+        showToastMessage(`${userToDelete.firstName || 'Kullanıcı'} ${userToDelete.lastName || ''} kullanıcısı başarıyla silindi`, 'warning');
+      } catch (error) {
+        showToastMessage('Kullanıcı silinirken bir hata oluştu', 'warning');
+      }
     }
     setShowConfirm(false);
     setUserToDelete(null);
@@ -172,6 +218,32 @@ const AdminUsers: React.FC = () => {
     setShowConfirm(false);
     setUserToDelete(null);
   };
+
+  // Kullanıcıları getir
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // API'den gelen veriyi frontend formatına dönüştür
+      const formattedUsers = response.data.map((user: any) => ({
+        ...user,
+        role: user.roleId === 2 ? 'admin' : 'user', // roleId'ye göre rol belirle
+        password: '********' // Şifre gösterilmeyecek
+      }));
+      
+      setUsers(formattedUsers);
+    } catch (error) {
+      showToastMessage('Kullanıcılar yüklenirken bir hata oluştu', 'warning');
+    }
+  };
+
+  // Component yüklendiğinde kullanıcıları getir
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
     <div className="admin-layout">
@@ -247,8 +319,8 @@ const AdminUsers: React.FC = () => {
             {users.map(user => (
               <tr key={user.id}>
                 <td>{user.id}</td>
-                <td>{user.firstName}</td>
-                <td>{user.lastName}</td>
+                <td>{user.firstName || ''}</td>
+                <td>{user.lastName || ''}</td>
                 <td>{user.role}</td>
                 <td>{formatDate(user.createdAt)}</td>
                 <td>{formatDate(user.updatedAt)}</td>
@@ -296,8 +368,8 @@ const AdminUsers: React.FC = () => {
                 <div className="row">
                   <div className="col-md-6">
                     <p><b>ID:</b> {selectedUser.id}</p>
-                    <p><b>Ad:</b> {selectedUser.firstName}</p>
-                    <p><b>Soyad:</b> {selectedUser.lastName}</p>
+                    <p><b>Ad:</b> {selectedUser.firstName || ''}</p>
+                    <p><b>Soyad:</b> {selectedUser.lastName || ''}</p>
                     <p><b>E-posta:</b> {selectedUser.email}</p>
                   </div>
                   <div className="col-md-6">

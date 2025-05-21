@@ -21,12 +21,20 @@ const userService = new UserService();
  *               type: object
  *               properties:
  *                 id:
+ *                   type: number
+ *                 firstName:
  *                   type: string
- *                 ad:
+ *                 lastName:
  *                   type: string
- *                 soyad:
+ *                 email:
  *                   type: string
- *                 eposta:
+ *                 isActive:
+ *                   type: boolean
+ *                 roleId:
+ *                   type: number
+ *                 createdAt:
+ *                   type: string
+ *                 updatedAt:
  *                   type: string
  *       401:
  *         description: Yetkilendirme hatası

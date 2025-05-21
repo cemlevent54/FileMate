@@ -10,6 +10,7 @@ interface LoginResponse {
   user: {
     id: number;
     email: string;
+    role: string;
   };
   accessToken: string;
   refreshToken: string;
@@ -60,8 +61,12 @@ const LoginPage: React.FC = () => {
       // Auth context'i güncelle
       await login(email, password);
 
-      // Yönlendirme yap
-      navigate('/profile');
+      // Kullanıcı rolüne göre yönlendirme yap
+      if (user.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/profile');
+      }
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.response?.data?.message || translations.login.error);

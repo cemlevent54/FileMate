@@ -49,4 +49,32 @@
   margin-right: 0.75rem;
   width: 20px;
   text-align: center;
+}
+
+.logout-item {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+}
+
+.logout-button {
+  width: 100%;
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.3s;
+}
+
+.logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.logout-button i {
+  font-size: 1.1em;
 } 

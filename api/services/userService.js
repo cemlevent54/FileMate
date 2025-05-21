@@ -15,17 +15,19 @@ class UserService {
 
         const userObj = user.get({ plain: true });
         delete userObj.password;
+
+        console.log('[[LOG]]User from database:', user);
         
         return {
             id: userObj.id,
-            firstName: userObj.firstname,
-            lastName: userObj.lastname,
-            email: userObj.email,
+            firstName: userObj.firstName || '',
+            lastName: userObj.lastName || '',
+            email: userObj.email || '',
             isActive: userObj.isActive || false,
             roleId: userObj.roleId || 0,
             createdAt: userObj.createdAt || '',
             updatedAt: userObj.updatedAt || ''
-        };
+          };
     }
 
     async updatePassword(userId, oldPassword, newPassword) {
@@ -46,20 +48,27 @@ class UserService {
     async updateUserInfo(userId, userData) {
         const user = await this.userRepository.findById(userId);
         if (!user) {
-            throw new Error('Kullanıcı bulunamadı');
+          throw new Error('Kullanıcı bulunamadı');
         }
-
-        // E-posta değişikliği varsa kontrol et
+      
         if (userData.email && userData.email !== user.email) {
-            const existingUser = await this.userRepository.findByEmail(userData.email);
-            if (existingUser) {
-                throw new Error('Bu e-posta adresi zaten kullanımda');
-            }
+          const existingUser = await this.userRepository.findByEmail(userData.email);
+          if (existingUser) {
+            throw new Error('Bu e-posta adresi zaten kullanımda');
+          }
         }
-
+      
         await this.userRepository.updateUserInfo(userId, userData);
-        return { message: 'Kullanıcı bilgileri başarıyla güncellendi' };
-    }
+      
+        // 👇 Güncellenmiş kullanıcıyı getir
+        const updatedUser = await this.getCurrentUser(userId);
+      
+        return {
+          message: 'Kullanıcı bilgileri başarıyla güncellendi',
+          user: updatedUser
+        };
+      }
+      
 
     async deleteAccount(userId) {
         const user = await this.userRepository.findById(userId);
