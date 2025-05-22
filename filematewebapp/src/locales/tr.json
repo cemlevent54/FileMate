@@ -8,7 +8,22 @@
   },
   "welcome": {
     "title": "FileMate'e Hoş Geldiniz",
-    "subtitle": "Dosya yönetim sisteminiz"
+    "subtitle": "Dosya yönetim sisteminiz",
+    "features": {
+      "upload": {
+        "title": "Kolay Yükleme",
+        "description": "Dosyalarınızı sürükle-bırak ile kolayca yükleyin"
+      },
+      "storage": {
+        "title": "Güvenli Depolama",
+        "description": "Dosyalarınız güvenli bir şekilde saklanır"
+      },
+      "share": {
+        "title": "Kolay Paylaşım",
+        "description": "Dosyalarınızı tek tıkla paylaşın"
+      }
+    },
+    "getStarted": "Hemen Başla"
   },
   "common": {
     "language": "Dil",
@@ -60,7 +75,26 @@
     "fileSize": "Dosya Boyutu",
     "fileType": "Dosya Tipi",
     "uploadDate": "Yüklenme Tarihi",
-    "actions": "İşlemler"
+    "actions": "İşlemler",
+    "filesUploadingError": "Dosyalar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+    "fileUploadSuccess": "Dosya başarıyla yüklendi",
+    "fileUploadError": "Dosya yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+    "fileDeleteSuccess": "Dosya başarıyla silindi",
+    "fileDeleteError": "Dosya silinirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+    "fileUpdateSuccess": "Dosya başarıyla güncellendi",
+    "fileUpdateError": "Dosya güncellenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+    "view": "Görüntüle",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "newFile": "Yeni Dosya Seç",
+    "previewNotSupported": "Bu dosya türü için önizleme desteklenmiyor.",
+    "deleteFileTitle": "Dosyayı Sil",
+    "deleteFileConfirm": "dosyasını silmek istediğinize emin misiniz?",
+    "yesDelete": "Evet, Sil",
+    "cancel": "Vazgeç",
+    "update": "Güncelle",
+    "viewFile": "Dosya Görüntüle",
+    "editFile": "Dosya Düzenle"
   },
   "profilePage": {
     "title": "Profil Ayarları",

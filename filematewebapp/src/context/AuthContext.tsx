@@ -6,6 +6,7 @@ const API_BASE_URL = 'http://localhost:8030';
 interface User {
   id: number;
   email: string;
+  role: string;
 }
 
 interface LoginResponse {

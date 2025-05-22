@@ -8,7 +8,22 @@
   },
   "welcome": {
     "title": "Welcome to FileMate",
-    "subtitle": "Your file management system"
+    "subtitle": "Your file management system",
+    "features": {
+      "upload": {
+        "title": "Easy Upload",
+        "description": "Upload your files easily with drag and drop"
+      },
+      "storage": {
+        "title": "Secure Storage",
+        "description": "Your files are stored securely"
+      },
+      "share": {
+        "title": "Easy Sharing",
+        "description": "Share your files with just one click"
+      }
+    },
+    "getStarted": "Get Started"
   },
   "common": {
     "language": "Language",
@@ -60,7 +75,26 @@
     "fileSize": "File Size",
     "fileType": "File Type",
     "uploadDate": "Upload Date",
-    "actions": "Actions"
+    "actions": "Actions",
+    "filesUploadingError": "An error occurred while uploading files. Please try again later.",
+    "fileUploadSuccess": "File uploaded successfully",
+    "fileUploadError": "An error occurred while uploading the file. Please try again later.",
+    "fileDeleteSuccess": "File deleted successfully",
+    "fileDeleteError": "An error occurred while deleting the file. Please try again later.",
+    "fileUpdateSuccess": "File updated successfully",
+    "fileUpdateError": "An error occurred while updating the file. Please try again later.",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "newFile": "Select New File",
+    "previewNotSupported": "Preview is not supported for this file type.",
+    "deleteFileTitle": "Delete File",
+    "deleteFileConfirm": "Are you sure you want to delete the file",
+    "yesDelete": "Yes, Delete",
+    "cancel": "Cancel",
+    "update": "Update",
+    "viewFile": "View File",
+    "editFile": "Edit File"
   },
   "profilePage": {
     "title": "Profile Settings",

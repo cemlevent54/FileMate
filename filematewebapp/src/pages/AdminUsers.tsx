@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/AdminDashboard.css';
+
+import '../styles/AdminUsers.css';
 import AdminSidebar from '../components/AdminSidebar';
 import ConfirmModal from '../components/ConfirmModal';
 import axios from 'axios';
@@ -53,6 +54,12 @@ const mockUsers: User[] = [
 
 const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{
+    key: 'id' | 'firstName' | 'lastName' | 'role' | 'email' | null;
+    direction: 'asc' | 'desc' | null;
+  }>({ key: null, direction: null });
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -276,271 +283,377 @@ const AdminUsers: React.FC = () => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    const filtered = users.filter(user => 
+      (user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.role?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+    );
+    setFilteredUsers(filtered);
+  }, [searchTerm, users]);
+
+  const handleSort = (key: 'id' | 'firstName' | 'lastName' | 'role' | 'email') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+
+    const sortedUsers = [...filteredUsers].sort((a, b) => {
+      if (key === 'id') {
+        return direction === 'asc' ? a.id - b.id : b.id - a.id;
+      } else if (key === 'firstName') {
+        const nameA = a.firstName || '';
+        const nameB = b.firstName || '';
+        return direction === 'asc' 
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA);
+      } else if (key === 'lastName') {
+        const nameA = a.lastName || '';
+        const nameB = b.lastName || '';
+        return direction === 'asc'
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA);
+      } else if (key === 'role') {
+        const roleA = a.role || '';
+        const roleB = b.role || '';
+        return direction === 'asc'
+          ? roleA.localeCompare(roleB)
+          : roleB.localeCompare(roleA);
+      } else {
+        return direction === 'asc'
+          ? a.email.localeCompare(b.email)
+          : b.email.localeCompare(a.email);
+      }
+    });
+
+    setFilteredUsers(sortedUsers);
+  };
+
   return (
     <div className="admin-layout">
       <AdminSidebar />
       <div className="admin-content">
-        <h2>Kullanıcılar</h2>
-        
-        {/* Toast Mesajı */}
-        {showToast && (
-          <div 
-            style={{
-              position: 'fixed',
-              top: '20px',
-              right: '20px',
-              padding: '15px 25px',
-              backgroundColor: toastType === 'success' ? '#28a745' : '#ffc107',
-              color: 'white',
-              borderRadius: '4px',
-              boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-              zIndex: 9999,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              animation: 'slideIn 0.3s ease-out'
-            }}
-          >
-            <i className={`fas fa-${toastType === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
-            <span>{toastMessage}</span>
-            <button 
-              onClick={() => setShowToast(false)}
+        <div className="admin-users-container">
+          <div className="admin-users-header">
+            <div className="admin-users-header-inner">
+              <h2 className="admin-users-title">Kullanıcılar</h2>
+              <div className="admin-users-search">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ad, soyad, rol veya email ile ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Toast Mesajı */}
+          {showToast && (
+            <div 
               style={{
-                background: 'none',
-                border: 'none',
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                padding: '15px 25px',
+                backgroundColor: toastType === 'success' ? '#28a745' : '#ffc107',
                 color: 'white',
-                marginLeft: '10px',
-                cursor: 'pointer',
-                padding: '0 5px'
+                borderRadius: '4px',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                animation: 'slideIn 0.3s ease-out'
               }}
             >
-              ×
-            </button>
-          </div>
-        )}
+              <i className={`fas fa-${toastType === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
+              <span>{toastMessage}</span>
+              <button 
+                onClick={() => setShowToast(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'white',
+                  marginLeft: '10px',
+                  cursor: 'pointer',
+                  padding: '0 5px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
-        <style>
-          {`
-            @keyframes slideIn {
-              from {
-                transform: translateX(100%);
-                opacity: 0;
+          <style>
+            {`
+              @keyframes slideIn {
+                from {
+                  transform: translateX(100%);
+                  opacity: 0;
+                }
+                to {
+                  transform: translateX(0);
+                  opacity: 1;
+                }
               }
-              to {
-                transform: translateX(0);
-                opacity: 1;
-              }
-            }
-          `}
-        </style>
+            `}
+          </style>
 
-        <table className="table">
-          <thead>
-            <tr>
-              <th>id</th>
-              <th>Ad</th>
-              <th>Soyad</th>
-              <th>Rol</th>
-              <th>Oluşturulma</th>
-              <th>Güncellenme</th>
-              <th>İşlemler</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map(user => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.firstName || ''}</td>
-                <td>{user.lastName || ''}</td>
-                <td>{user.role}</td>
-                <td>{formatDate(user.createdAt)}</td>
-                <td>{formatDate(user.updatedAt)}</td>
-                <td>
-                  <button className="btn btn-info btn-sm me-2" onClick={() => handleShowDetails(user)}>Detaylar</button>
-                  <button className="btn btn-warning btn-sm me-2" onClick={() => handleToggleActive(user.id)}>
-                    {user.isActive ? 'Engelle' : 'Aktif Et'}
-                  </button>
-                  <button className="btn btn-danger btn-sm me-2" onClick={() => handleDeleteClick(user)}>Sil</button>
-                  <button className="btn btn-secondary btn-sm" onClick={() => handleShowUpdate(user)}>Güncelle</button>
-                </td>
+          <table className="admin-users-table">
+            <thead>
+              <tr>
+                <th 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleSort('id')}
+                >
+                  ID
+                  {sortConfig.key === 'id' && (
+                    <span style={{ marginLeft: '5px' }}>
+                      {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </th>
+                <th 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleSort('firstName')}
+                >
+                  Ad
+                  {sortConfig.key === 'firstName' && (
+                    <span style={{ marginLeft: '5px' }}>
+                      {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </th>
+                <th 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleSort('lastName')}
+                >
+                  Soyad
+                  {sortConfig.key === 'lastName' && (
+                    <span style={{ marginLeft: '5px' }}>
+                      {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </th>
+                <th 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleSort('role')}
+                >
+                  Rol
+                  {sortConfig.key === 'role' && (
+                    <span style={{ marginLeft: '5px' }}>
+                      {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </th>
+                
+                <th>Oluşturulma</th>
+                <th>Güncellenme</th>
+                <th>İşlemler</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredUsers.map(user => (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>{user.firstName || ''}</td>
+                  <td>{user.lastName || ''}</td>
+                  <td>{user.role}</td>
+                  <td>{formatDate(user.createdAt)}</td>
+                  <td>{formatDate(user.updatedAt)}</td>
+                  <td>
+                    <div className="admin-users-actions">
+                      <button className="btn btn-info btn-sm" onClick={() => handleShowDetails(user)}>Detaylar</button>
+                      <button className="btn btn-warning btn-sm" onClick={() => handleToggleActive(user.id)}>
+                        {user.isActive ? 'Engelle' : 'Aktif Et'}
+                      </button>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDeleteClick(user)}>Sil</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => handleShowUpdate(user)}>Güncelle</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        {/* Detaylar Modalı */}
-        {showModal && selectedUser && (
-          <div className="custom-modal-backdrop" onClick={handleCloseModal}>
-            <div className="custom-modal animate-modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-header" style={{ position: 'relative' }}>
-                <h5 className="modal-title">Kullanıcı Detayları</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  aria-label="Kapat"
-                  onClick={handleCloseModal}
-                  style={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 20,
-                    fontSize: '1.5rem',
-                    background: 'none',
-                    border: 'none',
-                    color: '#888',
-                    cursor: 'pointer',
-                    opacity: 0.8,
-                    zIndex: 2
-                  }}
-                >
-                  &#10005;
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <p><b>ID:</b> {selectedUser.id}</p>
-                    <p><b>Ad:</b> {selectedUser.firstName || ''}</p>
-                    <p><b>Soyad:</b> {selectedUser.lastName || ''}</p>
-                    <p><b>E-posta:</b> {selectedUser.email}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <p><b>Rol:</b> {selectedUser.role}</p>
-                    <p><b>Şifre:</b> {selectedUser.password}</p>
-                    <p><b>Oluşturulma:</b> {formatDate(selectedUser.createdAt)}</p>
-                    <p><b>Güncellenme:</b> {formatDate(selectedUser.updatedAt)}</p>
-                    <p><b>Durum:</b> {selectedUser.isActive ? 'Aktif' : 'Engelli'}</p>
-                  </div>
+          {/* Detaylar Modalı */}
+          {showModal && selectedUser && (
+            <div className="custom-modal-backdrop" onClick={handleCloseModal}>
+              <div className="custom-modal animate-modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-header" style={{ position: 'relative' }}>
+                  <h5 className="modal-title">Kullanıcı Detayları</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    aria-label="Kapat"
+                    onClick={handleCloseModal}
+                    style={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 20,
+                      fontSize: '1.5rem',
+                      background: 'none',
+                      border: 'none',
+                      color: '#888',
+                      cursor: 'pointer',
+                      opacity: 0.8,
+                      zIndex: 2
+                    }}
+                  >
+                    &#10005;
+                  </button>
                 </div>
-                <button className="btn btn-primary mt-3">Kullanıcı Dosyaları</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Güncelleme Modalı */}
-        {showUpdateModal && userToUpdate && (
-          <div className="custom-modal-backdrop" onClick={handleCloseUpdateModal}>
-            <div className="custom-modal animate-modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-header" style={{ position: 'relative' }}>
-                <h5 className="modal-title">Kullanıcı Güncelle</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  aria-label="Kapat"
-                  onClick={handleCloseUpdateModal}
-                  style={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 20,
-                    fontSize: '1.5rem',
-                    background: 'none',
-                    border: 'none',
-                    color: '#888',
-                    cursor: 'pointer',
-                    opacity: 0.8,
-                    zIndex: 2
-                  }}
-                >
-                  &#10005;
-                </button>
-              </div>
-              <div className="modal-body">
-                <form onSubmit={handleUpdateSubmit}>
+                <div className="modal-body">
                   <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Ad</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="firstName"
-                        value={updateForm.firstName}
-                        onChange={handleUpdateChange}
-                        required
-                      />
+                    <div className="col-md-6">
+                      <p><b>ID:</b> {selectedUser.id}</p>
+                      <p><b>Ad:</b> {selectedUser.firstName || ''}</p>
+                      <p><b>Soyad:</b> {selectedUser.lastName || ''}</p>
+                      <p><b>E-posta:</b> {selectedUser.email}</p>
                     </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Soyad</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="lastName"
-                        value={updateForm.lastName}
-                        onChange={handleUpdateChange}
-                        required
-                      />
+                    <div className="col-md-6">
+                      <p><b>Rol:</b> {selectedUser.role}</p>
+                      <p><b>Şifre:</b> {selectedUser.password}</p>
+                      <p><b>Oluşturulma:</b> {formatDate(selectedUser.createdAt)}</p>
+                      <p><b>Güncellenme:</b> {formatDate(selectedUser.updatedAt)}</p>
+                      <p><b>Durum:</b> {selectedUser.isActive ? 'Aktif' : 'Engelli'}</p>
                     </div>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">E-posta</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      name="email"
-                      value={updateForm.email}
-                      onChange={handleUpdateChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Rol</label>
-                    <select
-                      className="form-select"
-                      name="role"
-                      value={updateForm.role}
-                      onChange={handleUpdateChange}
-                      required
-                    >
-                      <option value="user">Kullanıcı</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Şifre</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      name="password"
-                      value={updateForm.password}
-                      onChange={handleUpdateChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      name="isActive"
-                      checked={updateForm.isActive}
-                      onChange={handleUpdateChange}
-                      id="isActiveCheck"
-                    />
-                    <label className="form-check-label" htmlFor="isActiveCheck">
-                      Aktif
-                    </label>
-                  </div>
-                  <div className="text-end">
-                    <button type="button" className="btn btn-secondary me-2" onClick={handleCloseUpdateModal}>
-                      İptal
-                    </button>
-                    <button type="submit" className="btn btn-primary">
-                      Güncelle
-                    </button>
-                  </div>
-                </form>
+                  
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <ConfirmModal
-          show={showConfirm}
-          title="Kullanıcıyı Sil"
-          description={userToDelete ? `${userToDelete.email} kullanıcısını silmek istediğinize emin misiniz?` : ''}
-          confirmText="Evet, Sil"
-          cancelText="Vazgeç"
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
+          {/* Güncelleme Modalı */}
+          {showUpdateModal && userToUpdate && (
+            <div className="custom-modal-backdrop" onClick={handleCloseUpdateModal}>
+              <div className="custom-modal animate-modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-header" style={{ position: 'relative' }}>
+                  <h5 className="modal-title">Kullanıcı Güncelle</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    aria-label="Kapat"
+                    onClick={handleCloseUpdateModal}
+                    style={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 20,
+                      fontSize: '1.5rem',
+                      background: 'none',
+                      border: 'none',
+                      color: '#888',
+                      cursor: 'pointer',
+                      opacity: 0.8,
+                      zIndex: 2
+                    }}
+                  >
+                    &#10005;
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <form onSubmit={handleUpdateSubmit}>
+                    <div className="row">
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">Ad</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="firstName"
+                          value={updateForm.firstName}
+                          onChange={handleUpdateChange}
+                          required
+                        />
+                      </div>
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">Soyad</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="lastName"
+                          value={updateForm.lastName}
+                          onChange={handleUpdateChange}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">E-posta</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+                        value={updateForm.email}
+                        onChange={handleUpdateChange}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Rol</label>
+                      <select
+                        className="form-select"
+                        name="role"
+                        value={updateForm.role}
+                        onChange={handleUpdateChange}
+                        required
+                      >
+                        <option value="user">Kullanıcı</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Şifre</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="password"
+                        value={updateForm.password}
+                        onChange={handleUpdateChange}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3 form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        name="isActive"
+                        checked={updateForm.isActive}
+                        onChange={handleUpdateChange}
+                        id="isActiveCheck"
+                      />
+                      <label className="form-check-label" htmlFor="isActiveCheck">
+                        Aktif
+                      </label>
+                    </div>
+                    <div className="text-end">
+                      <button type="button" className="btn btn-secondary me-2" onClick={handleCloseUpdateModal}>
+                        İptal
+                      </button>
+                      <button type="submit" className="btn btn-primary">
+                        Güncelle
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <ConfirmModal
+            show={showConfirm}
+            title="Kullanıcıyı Sil"
+            description={userToDelete ? `${userToDelete.email} kullanıcısını silmek istediğinize emin misiniz?` : ''}
+            confirmText="Evet, Sil"
+            cancelText="Vazgeç"
+            onConfirm={handleConfirmDelete}
+            onCancel={handleCancelDelete}
+          />
+        </div>
       </div>
     </div>
   );

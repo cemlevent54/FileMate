@@ -50,12 +50,6 @@ const AdminSidebar: React.FC = () => {
               Dosyalar
             </Link>
           </li>
-          <li>
-            <Link to="/admin/settings">
-              <i className="fas fa-cog"></i>
-              Ayarlar
-            </Link>
-          </li>
           <li className="logout-item">
             <button onClick={handleLogout} className="logout-button">
               <i className="fas fa-sign-out-alt"></i>

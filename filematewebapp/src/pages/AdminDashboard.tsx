@@ -8,19 +8,10 @@ const AdminDashboard: React.FC = () => {
       <AdminSidebar />
       <div className="admin-content">
         <div className="admin-header">
-          <h1>Dashboard</h1>
+          <h1>FileMate Admin Panel</h1>
         </div>
         <div className="admin-main">
-          <div className="dashboard-stats">
-            <div className="stat-card">
-              <h3>Toplam Kullanıcı</h3>
-              <p>150</p>
-            </div>
-            <div className="stat-card">
-              <h3>Toplam Dosya</h3>
-              <p>1,250</p>
-            </div>
-          </div>
+          FileMate Admin Panel üzerinden kullanıcı hesaplarını yönetebilir, dosya işlemlerini kontrol edebilir ve sistem genelindeki aktiviteleri takip edebilirsiniz.
         </div>
       </div>
     </div>

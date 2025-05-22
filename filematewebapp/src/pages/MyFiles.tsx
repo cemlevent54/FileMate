@@ -58,7 +58,7 @@ const MyFiles: React.FC = () => {
       setFiles(response.data.files);
     } catch (error) {
       console.error('Dosyalar yüklenirken hata oluştu:', error);
-      showToastMessage('Dosyalar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
+      showToastMessage(translations.myFiles.filesUploadingError, 'warning');
     }
   };
 
@@ -95,13 +95,13 @@ const MyFiles: React.FC = () => {
       );
 
       setFiles(prevFiles => [...prevFiles, response.data.file]);
-      showToastMessage('Dosya başarıyla yüklendi', 'success');
+      showToastMessage(translations.myFiles.fileUploadSuccess, 'success');
       setShowUploadModal(false);
       setSelectedFile(null);
       setPreviewUrl('');
     } catch (error) {
       console.error('Dosya yüklenirken hata oluştu:', error);
-      showToastMessage('Dosya yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
+      showToastMessage(translations.myFiles.fileUploadError, 'warning');
     }
   };
 
@@ -123,12 +123,12 @@ const MyFiles: React.FC = () => {
       );
 
       setFiles(prevFiles => prevFiles.filter(file => file.id !== fileToDelete.id));
-      showToastMessage(`${fileToDelete.uploadedFilename} dosyası başarıyla silindi`, 'success');
+      showToastMessage(translations.myFiles.fileDeleteSuccess, 'success');
       setShowConfirm(false);
       setFileToDelete(null);
     } catch (error) {
       console.error('Dosya silinirken hata oluştu:', error);
-      showToastMessage('Dosya silinirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
+      showToastMessage(translations.myFiles.fileDeleteError, 'warning');
     }
   };
 
@@ -208,7 +208,7 @@ const MyFiles: React.FC = () => {
       handleCloseUpdateModal();
     } catch (error) {
       console.error('Dosya güncellenirken hata oluştu:', error);
-      showToastMessage('Dosya güncellenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
+      showToastMessage(translations.myFiles.fileUpdateError, 'warning');
     }
   };
 
@@ -298,7 +298,7 @@ const MyFiles: React.FC = () => {
                   className="me-2"
                   onClick={() => handleViewFile(file)}
                 >
-                  Görüntüle
+                  {translations.myFiles.view}
                 </Button>
                 <Button
                   variant="warning"
@@ -306,14 +306,14 @@ const MyFiles: React.FC = () => {
                   className="me-2"
                   onClick={() => handleShowUpdate(file)}
                 >
-                  Düzenle
+                  {translations.myFiles.edit}
                 </Button>
                 <Button
                   variant="danger"
                   size="sm"
                   onClick={() => handleDeleteClick(file)}
                 >
-                  Sil
+                  {translations.myFiles.delete}
                 </Button>
               </td>
             </tr>
@@ -359,7 +359,7 @@ const MyFiles: React.FC = () => {
                     />
                   ) : (
                     <div style={{ color: 'red', fontSize: '14px' }}>
-                      Bu dosya türü için önizleme desteklenmiyor.
+                      {translations.myFiles.previewNotSupported}
                     </div>
                   )}
                 </div>
@@ -394,7 +394,7 @@ const MyFiles: React.FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="modal-header" style={{ position: 'relative' }}>
-              <h5 className="modal-title">Dosya Görüntüle</h5>
+              <h5 className="modal-title">{translations.myFiles.viewFile}</h5>
               <button
                 type="button"
                 className="btn-close"
@@ -445,7 +445,7 @@ const MyFiles: React.FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="modal-header" style={{ position: 'relative' }}>
-              <h5 className="modal-title">Dosya Düzenle</h5>
+              <h5 className="modal-title">{translations.myFiles.editFile}</h5>
               <button
                 type="button"
                 className="btn-close"
@@ -469,7 +469,7 @@ const MyFiles: React.FC = () => {
             </div>
             <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
               <div className="mb-4">
-                <label className="form-label">Yeni Dosya Seç</label>
+                <label className="form-label">{translations.myFiles.newFile}</label>
                 <input
                   type="file"
                   className="form-control"
@@ -480,7 +480,7 @@ const MyFiles: React.FC = () => {
               
               {updatePreviewUrl && (
                 <div className="mb-4">
-                  <label className="form-label">Önizleme</label>
+                  <label className="form-label">{translations.myFiles.preview}</label>
                   {fileToUpdate?.uploadedFilename.endsWith('.pdf') ? (
                     <FileViewer
                       filename={fileToUpdate.uploadedFilename}
@@ -511,14 +511,14 @@ const MyFiles: React.FC = () => {
                   className="btn btn-secondary me-2"
                   onClick={handleCloseUpdateModal}
                 >
-                  İptal
+                  {translations.myFiles.cancel}
                 </button>
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={handleUpdateSubmit}
                 >
-                  Güncelle
+                  {translations.myFiles.update}
                 </button>
               </div>
             </div>
@@ -528,10 +528,10 @@ const MyFiles: React.FC = () => {
 
       <ConfirmModal
         show={showConfirm}
-        title="Dosyayı Sil"
-        description={fileToDelete ? `${fileToDelete.uploadedFilename} dosyasını silmek istediğinize emin misiniz?` : ''}
-        confirmText="Evet, Sil"
-        cancelText="Vazgeç"
+        title={translations.myFiles.deleteFileTitle}
+        description={fileToDelete ? `${fileToDelete.uploadedFilename} ${translations.myFiles.deleteFileConfirm}?` : ''}
+        confirmText={translations.myFiles.yesDelete}
+        cancelText={translations.myFiles.cancel}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

@@ -3,6 +3,7 @@ import AdminSidebar from '../components/AdminSidebar';
 import ConfirmModal from '../components/ConfirmModal';
 import FileViewer from '../components/FileViewer';
 import '../styles/AdminDashboard.css';
+import '../styles/AdminFiles.css'
 import axios from 'axios';
 
 // Backend'den dönen dosya tipi
@@ -11,6 +12,7 @@ interface FileType {
   uploadedFilename: string;
   url: string;
   uploadUserId: number;
+  uploadUserName?: string; // Kullanıcı adı
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +27,12 @@ const formatDate = (dateString: string) => {
 
 const AdminFiles: React.FC = () => {
   const [files, setFiles] = useState<FileType[]>([]);
+  const [filteredFiles, setFilteredFiles] = useState<FileType[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{
+    key: 'id' | 'uploadedFilename' | 'uploadUserName' | null;
+    direction: 'asc' | 'desc' | null;
+  }>({ key: null, direction: null });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'warning'>('success');
@@ -43,6 +51,14 @@ const AdminFiles: React.FC = () => {
   useEffect(() => {
     fetchFiles();
   }, []);
+
+  useEffect(() => {
+    const filtered = files.filter(file => 
+      file.uploadedFilename.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (file.uploadUserName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+    );
+    setFilteredFiles(filtered);
+  }, [searchTerm, files]);
 
   useEffect(() => {
     if (showToast) {
@@ -156,11 +172,52 @@ const AdminFiles: React.FC = () => {
     setFileToView(null);
   };
 
+  const handleSort = (key: 'id' | 'uploadedFilename' | 'uploadUserName') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+
+    const sortedFiles = [...filteredFiles].sort((a, b) => {
+      if (key === 'id') {
+        const idA = String(a.id);
+        const idB = String(b.id);
+        return direction === 'asc' 
+          ? idA.localeCompare(idB)
+          : idB.localeCompare(idA);
+      } else if (key === 'uploadedFilename') {
+        return direction === 'asc'
+          ? a.uploadedFilename.localeCompare(b.uploadedFilename)
+          : b.uploadedFilename.localeCompare(a.uploadedFilename);
+      } else {
+        const nameA = a.uploadUserName || 'İsimsiz Kullanıcı';
+        const nameB = b.uploadUserName || 'İsimsiz Kullanıcı';
+        return direction === 'asc'
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA);
+      }
+    });
+
+    setFilteredFiles(sortedFiles);
+  };
+
   return (
     <div className="admin-layout">
       <AdminSidebar />
       <div className="admin-content">
-        <h2>Dosyalar</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 className="admin-files-title">Dosyalar</h2>
+          <div style={{ width: '300px' }}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Dosya adı veya kullanıcı adı ile ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
         {showToast && (
           <div
             style={{
@@ -202,25 +259,43 @@ const AdminFiles: React.FC = () => {
             to { transform: translateX(0); opacity: 1; }
           }
         `}</style>
-        <table className="table table-striped">
+        <table className="admin-files-table">
           <thead>
             <tr>
-              <th>id</th>
-              <th>Dosya Adı</th>
-              <th>Yükleyen Kullanıcı</th>
+              <th 
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('id')}
+              >
+                ID
+                {sortConfig.key === 'id' && (
+                  <span style={{ marginLeft: '5px' }}>
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th 
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('uploadedFilename')}
+              >
+                Dosya Adı
+                {sortConfig.key === 'uploadedFilename' && (
+                  <span style={{ marginLeft: '5px' }}>
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th>Kullanıcı ID</th>
+              
               <th>İşlemler</th>
             </tr>
           </thead>
           <tbody>
-            {files.map((file) => (
+            {filteredFiles.map((file) => (
               <tr key={file.id}>
                 <td>{file.id}</td>
                 <td>{file.uploadedFilename}</td>
-                <td>
-                  <button className="btn btn-link btn-sm" onClick={() => handleViewUser(file.uploadUserId)}>
-                    {file.uploadUserId}
-                  </button>
-                </td>
+                <td>{file.uploadUserId}</td>
+                
                 <td>
                   <button className="btn btn-info btn-sm me-2" onClick={() => handleShowDetails(file)}>Detaylar</button>
                   <button className="btn btn-secondary btn-sm me-2" onClick={() => handleViewFile(file)}>Görüntüle</button>
@@ -260,14 +335,13 @@ const AdminFiles: React.FC = () => {
               </div>
               <div className="modal-body">
                 <p><b>Dosya Adı:</b> {selectedFile.uploadedFilename} {' '}
-                  <button className="btn btn-secondary btn-sm" onClick={() => handleViewFile(selectedFile)}>
-                    Görüntüle
-                  </button>
+                  
                 </p>
                 <p><b>Dosya Yolu:</b> {selectedFile.url}</p>
-                <p><b>Yükleyen Kullanıcı ID:</b> {selectedFile.uploadUserId}</p>
-                <p><b>Oluşturulma:</b> {formatDate(selectedFile.createdAt)}</p>
-                <p><b>Güncellenme:</b> {formatDate(selectedFile.updatedAt)}</p>
+                <p><b>Kullanıcı ID:</b> {selectedFile.uploadUserId}</p>
+                <p><b>Kullanıcı Adı:</b> {selectedFile.uploadUserName || 'İsimsiz Kullanıcı'}</p>
+                <p><b>Oluşturulma Tarihi:</b> {formatDate(selectedFile.createdAt)}</p>
+                <p><b>Güncellenme Tarihi:</b> {formatDate(selectedFile.updatedAt)}</p>
               </div>
             </div>
           </div>
@@ -315,7 +389,7 @@ const AdminFiles: React.FC = () => {
                   <input type="text" className="form-control" name="filename" value={fileToUpdate.uploadedFilename} readOnly />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Yükleyen Kullanıcı ID</label>
+                  <label className="form-label">Kullanıcı ID</label>
                   <input type="number" className="form-control" name="uploadedBy" value={fileToUpdate.uploadUserId} readOnly />
                 </div>
                 <div className="text-end">
