@@ -79,8 +79,8 @@ class UserRepository {
         return await User.findAll({
             attributes: [
                 'id',
-                ['first_name', 'firstName'], // 👈 alias tanımla
-                ['last_name', 'lastName'],   // 👈 alias tanımla
+                ['first_name', 'firstName'], 
+                ['last_name', 'lastName'],  
                 'email',
                 'isActive',
                 'roleId',
