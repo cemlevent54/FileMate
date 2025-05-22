@@ -128,11 +128,27 @@ const AdminUsers: React.FC = () => {
     if (userToUpdate) {
       try {
         const token = localStorage.getItem('token');
-        // API'ye gönderilecek veriyi hazırla
-        const { role, ...updateData } = {
-          ...updateForm,
-          roleId: updateForm.role === 'admin' ? 2 : 1 // role değerini roleId'ye çevir
+        
+        // Güncelleme verilerini hazırla
+        const updateData: {
+          firstName: string;
+          lastName: string;
+          email: string;
+          role: string;
+          isActive: boolean;
+          password?: string;
+        } = {
+          firstName: updateForm.firstName,
+          lastName: updateForm.lastName,
+          email: updateForm.email,
+          role: updateForm.role,
+          isActive: updateForm.isActive
         };
+
+        // Şifre sadece değiştirilmişse gönder
+        if (updateForm.password !== '********') {
+          updateData.password = updateForm.password;
+        }
 
         const response = await axios.put(
           `${API_BASE_URL}/admin/users/${userToUpdate.id}`,
@@ -149,12 +165,27 @@ const AdminUsers: React.FC = () => {
           password: '********'
         };
         
-        setUsers(users.map(user => 
-          user.id === userToUpdate.id ? updatedUser : user
-        ));
+        // Tablo verilerini güncelle
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user.id === userToUpdate.id 
+              ? {
+                  ...user,
+                  firstName: updateForm.firstName,
+                  lastName: updateForm.lastName,
+                  email: updateForm.email,
+                  role: updateForm.role,
+                  isActive: updateForm.isActive,
+                  roleId: updateForm.role === 'admin' ? 2 : 1
+                }
+              : user
+          )
+        );
+
         showToastMessage(`${updateForm.firstName || 'Kullanıcı'} başarıyla güncellendi`, 'success');
         handleCloseUpdateModal();
       } catch (error) {
+        console.error('Güncelleme hatası:', error);
         showToastMessage('Kullanıcı güncellenirken bir hata oluştu', 'warning');
       }
     }

@@ -35,12 +35,15 @@ class UserRepository {
     async updateUserInfo(userId, userData) {
         return await User.update(
             {
-              firstName: userData.firstName, // 👈 Sequelize model alan adı
-              lastName: userData.lastName,
-              email: userData.email
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                email: userData.email,
+                roleId: userData.roleId,
+                isActive: userData.isActive,
+                password: userData.password
             },
             { where: { id: userId } }
-          );
+        );
     }
 
     async deleteUser(userId) {

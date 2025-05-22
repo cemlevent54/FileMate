@@ -153,9 +153,47 @@ module.exports = {
         try {
             const { id } = req.params;
             const userData = req.body;
+
+            // Boş alanları temizle
+            Object.keys(userData).forEach(key => {
+                if (userData[key] === '' || userData[key] === null) {
+                    delete userData[key];
+                }
+            });
+
+            // roleId kontrolü ve dönüşümü
+            if (userData.role) {
+                userData.roleId = userData.role === 'admin' ? 2 : 1;
+                delete userData.role;
+            }
+
+            // Şifre kontrolü
+            if (!userData.password || userData.password === '********') {
+                delete userData.password;
+            }
+
+            // Güncelleme öncesi kullanıcıyı kontrol et
+            const existingUser = await adminUserService.getUserById(id);
+            if (!existingUser) {
+                return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+            }
+
+            // Güncelleme işlemini gerçekleştir
             const updatedUser = await adminUserService.updateUser(id, userData);
-            return res.status(200).json(updatedUser);
+            
+            if (!updatedUser) {
+                return res.status(500).json({ error: 'Kullanıcı güncellenirken bir hata oluştu' });
+            }
+
+            // Frontend için rol bilgisini ekle
+            const responseData = {
+                ...updatedUser,
+                role: updatedUser.roleId === 2 ? 'admin' : 'user'
+            };
+
+            return res.status(200).json(responseData);
         } catch (error) {
+            console.error('Kullanıcı güncelleme hatası:', error);
             return res.status(500).json({ error: error.message });
         }
     },
