@@ -4,14 +4,15 @@ import { useAuth } from '../context/AuthContext';
 import { Button, Table, Modal, Form } from 'react-bootstrap';
 import FileViewer from '../components/FileViewer';
 import ConfirmModal from '../components/ConfirmModal';
+import axios from 'axios';
 
 interface FileData {
   id: string;
-  name: string;
-  size: number;
-  type: string;
-  uploadDate: string;
+  uploadedFilename: string;
   url: string;
+  uploadUserId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const MyFiles: React.FC = () => {
@@ -35,8 +36,10 @@ const MyFiles: React.FC = () => {
   const [toastType, setToastType] = useState<'success' | 'warning'>('success');
 
   useEffect(() => {
-    fetchUserFiles();
-  }, []);
+    if (user?.id) {
+      fetchUserFiles();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (showToast) {
@@ -47,48 +50,15 @@ const MyFiles: React.FC = () => {
 
   const fetchUserFiles = async () => {
     try {
-      // Simüle edilmiş API gecikmesi
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!process.env.REACT_APP_API_URL) {
+        throw new Error('API URL tanımlı değil');
+      }
 
-      // Mock veriler
-      const mockFiles: FileData[] = [
-        {
-          id: '1',
-          name: 'rapor.pdf',
-          size: 2048576, // 2MB
-          type: 'application/pdf',
-          uploadDate: '2024-03-15T10:30:00',
-          url: 'https://example.com/files/rapor.pdf'
-        },
-        {
-          id: '2',
-          name: 'sunum.pptx',
-          size: 5242880, // 5MB
-          type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          uploadDate: '2024-03-14T15:45:00',
-          url: 'https://example.com/files/sunum.pptx'
-        },
-        {
-          id: '3',
-          name: 'resim.jpg',
-          size: 1048576, // 1MB
-          type: 'image/jpeg',
-          uploadDate: '2024-03-13T09:15:00',
-          url: 'https://example.com/files/resim.jpg'
-        },
-        {
-          id: '4',
-          name: 'dokuman.docx',
-          size: 3145728, // 3MB
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          uploadDate: '2024-03-12T14:20:00',
-          url: 'https://example.com/files/dokuman.docx'
-        }
-      ];
-
-      setFiles(mockFiles);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/files/user/${user?.id}`);
+      setFiles(response.data.files);
     } catch (error) {
       console.error('Dosyalar yüklenirken hata oluştu:', error);
+      showToastMessage('Dosyalar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
     }
   };
 
@@ -98,34 +68,40 @@ const MyFiles: React.FC = () => {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+      console.log('Seçilen dosya türü:', file.type);
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !user?.id) return;
 
     try {
-      // Simüle edilmiş API gecikmesi
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!process.env.REACT_APP_API_URL) {
+        throw new Error('API URL tanımlı değil');
+      }
 
-      // Yeni dosya için mock veri oluştur
-      const newFile: FileData = {
-        id: Date.now().toString(),
-        name: selectedFile.name,
-        size: selectedFile.size,
-        type: selectedFile.type,
-        uploadDate: new Date().toISOString(),
-        url: URL.createObjectURL(selectedFile)
-      };
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('userId', user.id.toString());
 
-      // Mevcut dosyalara yeni dosyayı ekle
-      setFiles(prevFiles => [...prevFiles, newFile]);
-      
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/files/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      setFiles(prevFiles => [...prevFiles, response.data.file]);
+      showToastMessage('Dosya başarıyla yüklendi', 'success');
       setShowUploadModal(false);
       setSelectedFile(null);
       setPreviewUrl('');
     } catch (error) {
       console.error('Dosya yüklenirken hata oluştu:', error);
+      showToastMessage('Dosya yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
     }
   };
 
@@ -135,19 +111,24 @@ const MyFiles: React.FC = () => {
   };
 
   const handleConfirmDelete = async () => {
-    if (!fileToDelete) return;
+    if (!fileToDelete || !user?.id) return;
 
     try {
-      // Simüle edilmiş API gecikmesi
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!process.env.REACT_APP_API_URL) {
+        throw new Error('API URL tanımlı değil');
+      }
 
-      // Dosyayı listeden kaldır
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/api/files/${fileToDelete.id}?userId=${user.id}`
+      );
+
       setFiles(prevFiles => prevFiles.filter(file => file.id !== fileToDelete.id));
-      showToastMessage(`${fileToDelete.name} dosyası başarıyla silindi`, 'warning');
+      showToastMessage(`${fileToDelete.uploadedFilename} dosyası başarıyla silindi`, 'success');
       setShowConfirm(false);
       setFileToDelete(null);
     } catch (error) {
       console.error('Dosya silinirken hata oluştu:', error);
+      showToastMessage('Dosya silinirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
     }
   };
 
@@ -168,7 +149,7 @@ const MyFiles: React.FC = () => {
 
   const handleShowUpdate = (file: FileData) => {
     setFileToUpdate(file);
-    setUpdatePreviewUrl(file.url);
+    setUpdatePreviewUrl(`${process.env.REACT_APP_API_URL}${file.url}`);
     setShowUpdateModal(true);
   };
 
@@ -186,33 +167,48 @@ const MyFiles: React.FC = () => {
       if (fileToUpdate) {
         setFileToUpdate({
           ...fileToUpdate,
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: url
+          uploadedFilename: file.name
         });
       }
     }
   };
 
   const handleUpdateSubmit = async () => {
-    if (!fileToUpdate) return;
+    if (!fileToUpdate || !user?.id) return;
 
     try {
-      // Simüle edilmiş API gecikmesi
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!process.env.REACT_APP_API_URL) {
+        throw new Error('API URL tanımlı değil');
+      }
 
-      // Dosyayı güncelle
+      const formData = new FormData();
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput?.files?.[0]) {
+        formData.append('file', fileInput.files[0]);
+      }
+      formData.append('userId', user.id.toString());
+
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/files/${fileToUpdate.id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
       setFiles(prevFiles => 
         prevFiles.map(file => 
-          file.id === fileToUpdate.id ? fileToUpdate : file
+          file.id === fileToUpdate.id ? response.data.file : file
         )
       );
 
-      showToastMessage(`${fileToUpdate.name} dosyası başarıyla güncellendi`, 'success');
+      showToastMessage(`${fileToUpdate.uploadedFilename} dosyası başarıyla güncellendi`, 'success');
       handleCloseUpdateModal();
     } catch (error) {
       console.error('Dosya güncellenirken hata oluştu:', error);
+      showToastMessage('Dosya güncellenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'warning');
     }
   };
 
@@ -286,8 +282,6 @@ const MyFiles: React.FC = () => {
         <thead>
           <tr>
             <th>{translations.myFiles.fileName}</th>
-            <th>{translations.myFiles.fileSize}</th>
-            <th>{translations.myFiles.fileType}</th>
             <th>{translations.myFiles.uploadDate}</th>
             <th>{translations.myFiles.actions}</th>
           </tr>
@@ -295,10 +289,8 @@ const MyFiles: React.FC = () => {
         <tbody>
           {files.map((file) => (
             <tr key={file.id}>
-              <td>{file.name}</td>
-              <td>{(file.size / 1024).toFixed(2)} KB</td>
-              <td>{file.type}</td>
-              <td>{new Date(file.uploadDate).toLocaleDateString()}</td>
+              <td>{file.uploadedFilename}</td>
+              <td>{new Date(file.createdAt).toLocaleDateString()}</td>
               <td>
                 <Button
                   variant="info"
@@ -340,18 +332,39 @@ const MyFiles: React.FC = () => {
               <Form.Control
                 type="file"
                 onChange={handleFileSelect}
+                accept=".jpg,.jpeg,.png,.pdf,.pptx"
               />
             </Form.Group>
-            {previewUrl && (
-              <div className="mt-3">
-                <h6>{translations.myFiles.preview}</h6>
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  style={{ maxWidth: '100%', maxHeight: '200px' }}
-                />
-              </div>
-            )}
+            {previewUrl && selectedFile && (() => {
+              const name = selectedFile.name.toLowerCase();
+              const type = selectedFile.type;
+              // PDF ise hiç preview gösterme
+              if (type === 'application/pdf' || name.endsWith('.pdf')) {
+                return null;
+              }
+              return (
+                <div className="mt-3">
+                  <h6>{translations.myFiles.preview}</h6>
+                  {type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || name.endsWith('.pptx') ? (
+                    <FileViewer
+                      filename={selectedFile.name}
+                      filepath={previewUrl}
+                      mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                    />
+                  ) : type.startsWith('image/') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png') ? (
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      style={{ maxWidth: '100%', maxHeight: '200px' }}
+                    />
+                  ) : (
+                    <div style={{ color: 'red', fontSize: '14px' }}>
+                      Bu dosya türü için önizleme desteklenmiyor.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -405,9 +418,9 @@ const MyFiles: React.FC = () => {
             </div>
             <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
               <FileViewer
-                filename={fileToView.name}
-                filepath={fileToView.url}
-                mimeType={fileToView.type}
+                filename={fileToView.uploadedFilename}
+                filepath={`${process.env.REACT_APP_API_URL}${fileToView.url}`}
+                mimeType={fileToView.uploadedFilename.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'}
                 onDocxWidthChange={setFileViewerWidth}
               />
             </div>
@@ -461,19 +474,34 @@ const MyFiles: React.FC = () => {
                   type="file"
                   className="form-control"
                   onChange={handleUpdateFileSelect}
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf,.jpg,.jpeg,.png,.pptx"
                 />
               </div>
               
               {updatePreviewUrl && (
                 <div className="mb-4">
                   <label className="form-label">Önizleme</label>
-                  <FileViewer
-                    filename={fileToUpdate.name}
-                    filepath={updatePreviewUrl}
-                    mimeType={fileToUpdate.type}
-                    onDocxWidthChange={setUpdateFileViewerWidth}
-                  />
+                  {fileToUpdate?.uploadedFilename.endsWith('.pdf') ? (
+                    <FileViewer
+                      filename={fileToUpdate.uploadedFilename}
+                      filepath={updatePreviewUrl}
+                      mimeType="application/pdf"
+                      onDocxWidthChange={setUpdateFileViewerWidth}
+                    />
+                  ) : fileToUpdate?.uploadedFilename.endsWith('.pptx') ? (
+                    <FileViewer
+                      filename={fileToUpdate.uploadedFilename}
+                      filepath={updatePreviewUrl}
+                      mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                      onDocxWidthChange={setUpdateFileViewerWidth}
+                    />
+                  ) : (
+                    <img
+                      src={updatePreviewUrl}
+                      alt="Preview"
+                      style={{ maxWidth: '100%', maxHeight: '200px' }}
+                    />
+                  )}
                 </div>
               )}
 
@@ -501,7 +529,7 @@ const MyFiles: React.FC = () => {
       <ConfirmModal
         show={showConfirm}
         title="Dosyayı Sil"
-        description={fileToDelete ? `${fileToDelete.name} dosyasını silmek istediğinize emin misiniz?` : ''}
+        description={fileToDelete ? `${fileToDelete.uploadedFilename} dosyasını silmek istediğinize emin misiniz?` : ''}
         confirmText="Evet, Sil"
         cancelText="Vazgeç"
         onConfirm={handleConfirmDelete}

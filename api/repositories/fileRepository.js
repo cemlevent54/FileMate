@@ -66,6 +66,18 @@ class FileRepository {
             throw new Error('Dosya silinemedi');
         }
     }
+
+    async getAllFiles() {
+        try {
+            const files = await File.findAll({
+                order: [['createdAt', 'DESC']]
+            });
+            return files;
+        } catch (error) {
+            console.error('Tüm dosyalar alınamadı:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new FileRepository();

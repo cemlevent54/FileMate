@@ -3,51 +3,17 @@ import AdminSidebar from '../components/AdminSidebar';
 import ConfirmModal from '../components/ConfirmModal';
 import FileViewer from '../components/FileViewer';
 import '../styles/AdminDashboard.css';
+import axios from 'axios';
 
-type FileType = {
-  id: number;
-  filename: string;
-  filepath: string;
-  uploadedBy: number;
+// Backend'den dönen dosya tipi
+interface FileType {
+  id: string;
+  uploadedFilename: string;
+  url: string;
+  uploadUserId: number;
   createdAt: string;
   updatedAt: string;
-  mimeType: string;
-};
-
-function formatFilename(originalName: string): string {
-  const now = new Date();
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  const datePart = [
-    pad(now.getDate()),
-    pad(now.getMonth() + 1),
-    now.getFullYear().toString().slice(-2),
-    pad(now.getHours()),
-    pad(now.getMinutes()),
-    pad(now.getSeconds())
-  ].join('_');
-  return `${datePart}_${originalName}`;
 }
-
-const mockFiles: FileType[] = [
-  {
-    id: 1,
-    filename: formatFilename('Rapor.pdf'),
-    filepath: '/uploads/' + formatFilename('Rapor.pdf'),
-    uploadedBy: 2,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    mimeType: 'application/pdf',
-  },
-  {
-    id: 2,
-    filename: formatFilename('Fotoğraf.jpg'),
-    filepath: '/uploads/' + formatFilename('Fotoğraf.jpg'),
-    uploadedBy: 1,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000).toISOString(),
-    mimeType: 'image/jpeg',
-  },
-];
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -58,7 +24,7 @@ const formatDate = (dateString: string) => {
 };
 
 const AdminFiles: React.FC = () => {
-  const [files, setFiles] = useState<FileType[]>(mockFiles);
+  const [files, setFiles] = useState<FileType[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'warning'>('success');
@@ -68,18 +34,15 @@ const AdminFiles: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [fileToUpdate, setFileToUpdate] = useState<FileType | null>(null);
-  const [updateForm, setUpdateForm] = useState<Omit<FileType, 'id'>>({
-    filename: '',
-    filepath: '',
-    uploadedBy: 0,
-    createdAt: '',
-    updatedAt: '',
-    mimeType: '',
-  });
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<{ url: string, mimeType: string } | null>(null);
   const [fileViewerWidth, setFileViewerWidth] = useState<number | undefined>(undefined);
   const [showFileModal, setShowFileModal] = useState(false);
   const [fileToView, setFileToView] = useState<FileType | null>(null);
+  const [updateFile, setUpdateFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    fetchFiles();
+  }, []);
 
   useEffect(() => {
     if (showToast) {
@@ -87,6 +50,15 @@ const AdminFiles: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [showToast]);
+
+  const fetchFiles = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/files`);
+      setFiles(response.data.files);
+    } catch (error) {
+      showToastMessage('Dosyalar alınırken hata oluştu', 'warning');
+    }
+  };
 
   const showToastMessage = (message: string, type: 'success' | 'warning') => {
     setToastMessage(message);
@@ -106,54 +78,44 @@ const AdminFiles: React.FC = () => {
 
   const handleShowUpdate = (file: FileType) => {
     setFileToUpdate(file);
-    setUpdateForm({
-      filename: file.filename,
-      filepath: file.filepath,
-      uploadedBy: file.uploadedBy,
-      createdAt: file.createdAt,
-      updatedAt: file.updatedAt,
-      mimeType: file.mimeType,
-    });
     setShowUpdateModal(true);
+    setSelectedFileForPreview(null);
+    setUpdateFile(null);
   };
 
   const handleCloseUpdateModal = () => {
     setShowUpdateModal(false);
     setFileToUpdate(null);
     setSelectedFileForPreview(null);
+    setUpdateFile(null);
   };
 
   const handleUpdateChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, files } = e.target;
-    if (name === 'file' && files && files[0]) {
-      const file = files[0];
-      const formatted = formatFilename(file.name);
-      setUpdateForm((prev) => ({
-        ...prev,
-        filename: formatted,
-        filepath: '/uploads/' + formatted,
-      }));
-      const url = URL.createObjectURL(file);
-      setSelectedFileForPreview({ url, mimeType: file.type });
-    } else {
-      setUpdateForm((prev) => ({
-        ...prev,
-        [name]: type === 'number' ? Number(value) : value,
-      }));
+    const { files } = e.target;
+    if (files && files[0]) {
+      setUpdateFile(files[0]);
+      const url = URL.createObjectURL(files[0]);
+      setSelectedFileForPreview({ url, mimeType: files[0].type });
     }
   };
 
-  const handleUpdateSubmit = (e: FormEvent) => {
+  const handleUpdateSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (fileToUpdate) {
-      const updatedFile: FileType = {
-        ...fileToUpdate,
-        ...updateForm,
-        updatedAt: new Date().toISOString(),
-      };
-      setFiles(files.map((f) => (f.id === fileToUpdate.id ? updatedFile : f)));
-      showToastMessage(`${updateForm.filename} dosyası başarıyla güncellendi`, 'success');
+    if (!fileToUpdate || !updateFile) return;
+    try {
+      const formData = new FormData();
+      formData.append('file', updateFile);
+      formData.append('userId', fileToUpdate.uploadUserId.toString());
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/admin/files/${fileToUpdate.id}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      setFiles(files.map(f => f.id === fileToUpdate.id ? response.data.file : f));
+      showToastMessage('Dosya başarıyla güncellendi', 'success');
       handleCloseUpdateModal();
+    } catch (error) {
+      showToastMessage('Dosya güncellenirken hata oluştu', 'warning');
     }
   };
 
@@ -162,10 +124,14 @@ const AdminFiles: React.FC = () => {
     setShowConfirm(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (fileToDelete) {
-      setFiles(files.filter((f) => f.id !== fileToDelete.id));
-      showToastMessage(`${fileToDelete.filename} dosyası başarıyla silindi`, 'warning');
+  const handleConfirmDelete = async () => {
+    if (!fileToDelete) return;
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/admin/files/${fileToDelete.id}`);
+      setFiles(files.filter(f => f.id !== fileToDelete.id));
+      showToastMessage('Dosya başarıyla silindi', 'success');
+    } catch (error) {
+      showToastMessage('Dosya silinirken hata oluştu', 'warning');
     }
     setShowConfirm(false);
     setFileToDelete(null);
@@ -177,7 +143,8 @@ const AdminFiles: React.FC = () => {
   };
 
   const handleViewFile = (file: FileType) => {
-    window.open(file.filepath, '_blank');
+    setFileToView(file);
+    setShowFileModal(true);
   };
 
   const handleViewUser = (userId: number) => {
@@ -239,8 +206,8 @@ const AdminFiles: React.FC = () => {
           <thead>
             <tr>
               <th>id</th>
-              <th>filename</th>
-              <th>uploadedBy</th>
+              <th>Dosya Adı</th>
+              <th>Yükleyen Kullanıcı</th>
               <th>İşlemler</th>
             </tr>
           </thead>
@@ -248,10 +215,10 @@ const AdminFiles: React.FC = () => {
             {files.map((file) => (
               <tr key={file.id}>
                 <td>{file.id}</td>
-                <td>{file.filename}</td>
+                <td>{file.uploadedFilename}</td>
                 <td>
-                  <button className="btn btn-link btn-sm" onClick={() => handleViewUser(file.uploadedBy)}>
-                    {file.uploadedBy}
+                  <button className="btn btn-link btn-sm" onClick={() => handleViewUser(file.uploadUserId)}>
+                    {file.uploadUserId}
                   </button>
                 </td>
                 <td>
@@ -292,13 +259,13 @@ const AdminFiles: React.FC = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><b>Dosya Adı:</b> {selectedFile.filename} {' '}
+                <p><b>Dosya Adı:</b> {selectedFile.uploadedFilename} {' '}
                   <button className="btn btn-secondary btn-sm" onClick={() => handleViewFile(selectedFile)}>
                     Görüntüle
                   </button>
                 </p>
-                <p><b>Dosya Yolu:</b> {selectedFile.filepath}</p>
-                <p><b>Yükleyen Kullanıcı ID:</b> {selectedFile.uploadedBy}</p>
+                <p><b>Dosya Yolu:</b> {selectedFile.url}</p>
+                <p><b>Yükleyen Kullanıcı ID:</b> {selectedFile.uploadUserId}</p>
                 <p><b>Oluşturulma:</b> {formatDate(selectedFile.createdAt)}</p>
                 <p><b>Güncellenme:</b> {formatDate(selectedFile.updatedAt)}</p>
               </div>
@@ -340,16 +307,16 @@ const AdminFiles: React.FC = () => {
                 {selectedFileForPreview && (
                   <div className="mb-3">
                     <label className="form-label">Önizleme</label>
-                    <FileViewer filename={updateForm.filename} filepath={selectedFileForPreview.url} mimeType={selectedFileForPreview.mimeType} />
+                    <FileViewer filename={fileToUpdate.uploadedFilename} filepath={selectedFileForPreview.url} mimeType={selectedFileForPreview.mimeType} />
                   </div>
                 )}
                 <div className="mb-3">
                   <label className="form-label">Dosya Adı</label>
-                  <input type="text" className="form-control" name="filename" value={updateForm.filename} readOnly />
+                  <input type="text" className="form-control" name="filename" value={fileToUpdate.uploadedFilename} readOnly />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Yükleyen Kullanıcı ID</label>
-                  <input type="number" className="form-control" name="uploadedBy" value={updateForm.uploadedBy} onChange={handleUpdateChange} required readOnly/>
+                  <input type="number" className="form-control" name="uploadedBy" value={fileToUpdate.uploadUserId} readOnly />
                 </div>
                 <div className="text-end">
                   <button type="button" className="btn btn-secondary me-2" onClick={handleCloseUpdateModal}>İptal</button>
@@ -362,7 +329,7 @@ const AdminFiles: React.FC = () => {
         <ConfirmModal
           show={showConfirm}
           title="Dosyayı Sil"
-          description={fileToDelete ? `${fileToDelete.filename} dosyasını silmek istediğinize emin misiniz?` : ''}
+          description={fileToDelete ? `${fileToDelete.uploadedFilename} dosyasını silmek istediğinize emin misiniz?` : ''}
           confirmText="Evet, Sil"
           cancelText="Vazgeç"
           onConfirm={handleConfirmDelete}
@@ -377,7 +344,10 @@ const AdminFiles: React.FC = () => {
                 maxWidth: fileViewerWidth ? `${fileViewerWidth + 8}vw` : 700,
                 width: fileViewerWidth ? `${fileViewerWidth + 8}vw` : '90%',
                 minWidth: 350,
+                maxHeight: '90vh',
                 transition: 'width 0.2s, max-width 0.2s',
+                display: 'flex',
+                flexDirection: 'column',
               }}
               onClick={e => e.stopPropagation()}
             >
@@ -404,11 +374,11 @@ const AdminFiles: React.FC = () => {
                   &#10005;
                 </button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
                 <FileViewer
-                  filename={fileToView.filename}
-                  filepath={fileToView.filepath}
-                  mimeType={fileToView.mimeType}
+                  filename={fileToView.uploadedFilename}
+                  filepath={`${process.env.REACT_APP_API_URL}${fileToView.url}`}
+                  mimeType={fileToView.uploadedFilename.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'}
                   onDocxWidthChange={setFileViewerWidth}
                 />
               </div>

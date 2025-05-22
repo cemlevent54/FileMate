@@ -7,7 +7,7 @@ const upload = require('../config/multer');
 router.post('/upload', upload.single('file'), fileController.uploadFile);
 
 // Kullanıcıya ait dosyaları getir
-router.get('/user', fileController.getUserFiles);
+router.get('/user/:userId', fileController.getUserFiles);
 
 // Dosya güncelle
 router.put('/:fileId', upload.single('file'), fileController.updateUploadedFile);

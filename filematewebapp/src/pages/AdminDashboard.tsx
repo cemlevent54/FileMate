@@ -20,10 +20,6 @@ const AdminDashboard: React.FC = () => {
               <h3>Toplam Dosya</h3>
               <p>1,250</p>
             </div>
-            <div className="stat-card">
-              <h3>Aktif Oturum</h3>
-              <p>25</p>
-            </div>
           </div>
         </div>
       </div>
