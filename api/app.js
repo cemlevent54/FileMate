@@ -13,6 +13,7 @@ const configureCors = require('./config/cors');
 const configureMiddlewares = require('./config/middlewares');
 const configureEndpoints = require('./config/endpoints');
 const configureRoutes = require('./config/routes');
+const path = require('path');
 
 // Express uygulamasını oluştur
 const app = express();
@@ -26,5 +27,8 @@ configureMiddlewares(app);
 configureEndpoints(app);
 
 configureRoutes(app);
+
+// Statik dosya servisi
+app.use('/storage', express.static(path.join(__dirname, 'storage')));
 
 module.exports = app; 
