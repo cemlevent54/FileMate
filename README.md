@@ -10,6 +10,7 @@
   - [📚 Frontend (React.js)](#frontend-install)
   - [🧪 Backend (Node.js)](#node.js)
   - [📁 Complete Folder Structure](#complete-folder-structure)
+- [🚀 After Installation](#after-installation)
 - [🖼️ Example Screenshots](#example-screenshots)
 - [🎥 Project Demo](#project-demo)
 
@@ -121,9 +122,6 @@ npx sequelize-cli db:migrate
 
 **3. Run Seeders:**
 
-_Admin Email:_ `admin@gmail.com`  
-_Password:_ `admin`
-
 ```
 npx sequelize-cli db:seed:all
 ```
@@ -189,6 +187,21 @@ Filemate
 ├── .gitignore
 └── README.md
 ```
+
+### After Installation
+
+---
+
+**0.Register as a new user or log in with the admin account created with seeder.**
+
+- Admin email: `admin@gmail.com`
+- Admin password: `admin`
+
+**1.After logging in:**
+
+- You can upload, download, delete and update your files.
+- You can edit your profile information and change your password.
+- If you are logged in with an administrator account, you have full authority over all users and files.
 
 ### Example Screenshots
 
